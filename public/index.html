@@ -546,8 +546,8 @@ sup.cite{font-size:10.5px;color:var(--accent);font-weight:600;margin-left:2px;cu
 .item.completing .check svg{opacity:1;stroke:#fff}
 .item.completing .t{text-decoration:line-through;color:var(--muted)}
 @keyframes complete{0%{opacity:1;transform:none}60%{opacity:1;transform:translateX(6px)}100%{opacity:0;transform:translateX(24px)}}
-.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);opacity:0;background:var(--ink);color:#fff;padding:10px 12px 10px 16px;border-radius:12px;font-size:14px;display:flex;gap:12px;align-items:center;box-shadow:0 12px 30px -10px rgba(0,0,0,.35);transition:opacity .2s,transform .2s;z-index:50;max-width:calc(100vw - 32px)}
-.toast.on{opacity:1;transform:translate(-50%,0)}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);opacity:0;pointer-events:none;visibility:hidden;background:var(--ink);color:#fff;padding:10px 12px 10px 16px;border-radius:12px;font-size:14px;display:flex;gap:12px;align-items:center;box-shadow:0 12px 30px -10px rgba(0,0,0,.35);transition:opacity .2s,transform .2s;z-index:50;max-width:calc(100vw - 32px)}
+.toast.on{opacity:1;transform:translate(-50%,0);pointer-events:auto;visibility:visible}
 .toast button{background:rgba(255,255,255,.14);border:0;color:#fff;border-radius:6px;padding:4px 10px;font-size:13px;font-weight:500}
 .toast button:hover{background:rgba(255,255,255,.24)}
 .bit{position:fixed;width:8px;height:8px;border-radius:2px;pointer-events:none;z-index:60}
@@ -880,7 +880,8 @@ nav.tabs{display:none}
   .next{grid-template-columns:1fr}
   .c-next{margin-bottom:22px}
   .brand #demoFlag{border-left:0;padding-left:0}
-  .toast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+  .toast{bottom:auto;top:calc(10px + env(safe-area-inset-top,0px));transform:translate(-50%,-16px)}
+  .toast.on{transform:translate(-50%,0)}
   .money{grid-template-columns:1fr;gap:20px}
   .mside{position:static}
   .views{display:none}
@@ -927,10 +928,7 @@ nav.tabs{display:none}
   .lesson h3{font-size:24px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
-</style>
-</head>
-<body>
-
+</style></head><body>
 
 <div class="wrap">
   <header class="mast">
@@ -2497,7 +2495,7 @@ async function send(opts2){
   if (sample === undefined){ pending = text; $('#box').value=''; suggestEl.hidden = true; addMsg('me', esc(text)); pendingBubble = addMsg('bot thinking', DOTS); return; }
   if (!sample){ addMsg('me', esc(text)); addMsg('bot err', 'AI chat only works when this page is opened on claude.ai.'); $('#box').value=''; return; }
   $('#box').value = ''; suggestEl.hidden = true;
-  if (!(opts2 && opts2.quiet)) addMsg('me', esc(text));
+  if (!(opts2 && opts2.quiet)) addMsg('me', esc((opts2 && opts2.display) || text));
   turns.push({role:'user',content:text});
   if (turns.length > 14) turns = turns.slice(-14);
   while (turns[0] && turns[0].role !== 'user') turns.shift();
@@ -2587,7 +2585,7 @@ $('#fd').addEventListener('click', e => {
   const b = e.target.closest('[data-fd]'); if (!b) return; const k = b.dataset.fd;
   if (k==='miss') fdGrade(false); else if (k==='hit') fdGrade(true);
   else if (k==='again') studyDeck(FD.deck); else if (k==='missed') studyDeck(FD.deck, true);
-  else if (k==='quiz'){ const d = FD.deck; fdClose(); setView('plan'); switchTab('ask'); if (!sample){ toast('Quizzing needs the AI, which is offline in this view.'); return; } send({text:`Quiz me on my ${d.topic} flashcards, one question at a time. Don't show the answers until I try. Here they are: ${d.cards.map((c,k)=>`${k+1}. Q: ${c.q} A: ${c.a}`).join(' ')}`}); }
+  else if (k==='quiz'){ const d = FD.deck; fdClose(); setView('plan'); switchTab('ask'); if (!sample){ toast('Quizzing needs the AI, which is offline in this view.'); return; } send({display:`Quiz me on my ${d.topic} flashcards`, text:`Quiz me on my ${d.topic} flashcards, one question at a time. Don't show the answers until I try. Here they are: ${d.cards.map((c,k)=>`${k+1}. Q: ${c.q} A: ${c.a}`).join(' ')}`}); }
 });
 document.addEventListener('keydown', e => { if ($('#fd').hidden || e.target.matches('input,textarea,select')) return;
   if (e.key==='Escape') fdClose(); else if (e.key===' '){ e.preventDefault(); const fc = $('#fdBody .fc'); if (fc) fc.classList.toggle('flip'); }
@@ -2802,7 +2800,7 @@ $('#pt').addEventListener('click', e => {
   else if (k==='retake') ptStart({title:t.title, course:t.course, questions:t.questions.slice().sort(()=>Math.random()-.5), src:t.src});
   else if (k==='another') ptPicker();
   else if (k==='cards'){ const cards = t.missed.map(i=>({q:t.questions[i].q, a:`${t.questions[i].o[t.questions[i].a]}. ${t.questions[i].e}`})); const d = saveDeck({topic:`Review: ${t.title}`, course:t.course, cards}, 'test'); ptClose(); toast(`Made a ${cards.length} card review deck.`, {label:'Study now', run:()=>studyDeck(d)}); }
-  else if (k==='explain'){ const list = t.missed.map(i=>`- "${t.questions[i].q}" I picked "${t.questions[i].o[t.picks[i]] ?? '(skipped)'}", the answer was "${t.questions[i].o[t.questions[i].a]}"`).join('\n'); ptClose(); setView('plan'); switchTab('ask'); send({text:`I just took a practice test on ${t.title} and got ${t.score}/${t.total}. Explain what I missed, one at a time, with a memory hook for each:\n${list}`}); }
+  else if (k==='explain'){ const list = t.missed.map(i=>`- "${t.questions[i].q}" I picked "${t.questions[i].o[t.picks[i]] ?? '(skipped)'}", the answer was "${t.questions[i].o[t.questions[i].a]}"`).join('\n'); ptClose(); setView('plan'); switchTab('ask'); send({display:`Explain the ${t.missed.length} I missed on ${t.title} (${t.score}/${t.total})`, text:`I just took a practice test on ${t.title} and got ${t.score}/${t.total}. Explain what I missed, one at a time, with a memory hook for each:\n${list}`}); }
 });
 document.addEventListener('keydown', e => { if ($('#pt').hidden || e.target.matches('input,textarea,select')) return;
   if (e.key==='Escape') ptClose();
@@ -3071,6 +3069,4 @@ if (!S.profile) showLand();
 booted = true; checkAch(true); // everything is defined now; sets the trophy count on first paint
 })();
 </script>
-
-</body>
-</html>
+</body></html>
