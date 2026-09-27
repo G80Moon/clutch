@@ -54,7 +54,6 @@ header.mast{padding-bottom:18px}
 .brand .hello{margin-left:auto;background:none;border:0;padding:3px 8px;border-radius:8px;font-size:13.5px;color:var(--ink2)}
 .brand .hello:hover{background:var(--hover)}
 .brand .hello b{color:var(--accent);font-weight:600}
-.brand .views{margin-left:0;border-radius:8px}
 .linkbtn{background:none;border:0;padding:0;color:var(--accent);text-decoration:underline;text-underline-offset:2px;font-size:13px;border-radius:8px}
 .linkbtn:hover{color:var(--ink)}
 
@@ -329,9 +328,48 @@ form.send{display:block;padding:8px 12px 12px}
 
 
 /* view switch */
-.views{margin-left:auto;display:flex;gap:2px;background:var(--hover);border-radius:6px;padding:2px}
-.views button{background:none;border:0;padding:4px 12px;border-radius:4px;font-size:13px;color:var(--ink2)}
-.views button[aria-pressed="true"]{background:var(--accent);color:#fff;box-shadow:0 1px 2px rgba(15,15,15,.1);font-weight:500}
+/* left rail (desktop) */
+:root{--railw:232px}
+html[data-rail="closed"]{--railw:68px}
+.rail{position:fixed;left:0;top:0;bottom:0;width:var(--railw);background:var(--side);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:14px 10px calc(14px + env(safe-area-inset-bottom,0px));gap:6px;z-index:20;transition:width .18s ease}
+.rail svg{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.rail .rl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.rbrand{display:flex;align-items:center;gap:8px;padding:2px 6px 10px;min-height:44px}
+.rmark{width:30px;height:30px;flex:none;background:var(--markimg) center/contain no-repeat}
+.rname{font-family:var(--display);font-weight:700;font-size:17px;letter-spacing:-.01em;color:var(--ink)}
+.rtoggle{margin-left:auto;width:30px;height:30px;border:0;background:none;border-radius:8px;color:var(--muted);display:grid;place-items:center}
+.rtoggle:hover{background:var(--hover);color:var(--ink)}
+.rtoggle svg{width:18px;height:18px}
+.views{display:flex;flex-direction:column;gap:2px}
+.views button,.rail .ritem{display:flex;align-items:center;gap:11px;width:100%;background:none;border:0;padding:9px 11px;border-radius:9px;font-size:14px;color:var(--ink2);text-align:left;font-weight:500}
+.views button:hover,.rail .ritem:hover{background:var(--hover);color:var(--ink)}
+.views button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent-deep);font-weight:600}
+.rfoot{margin-top:auto;display:flex;flex-direction:column;gap:2px;border-top:1px solid var(--line);padding-top:8px}
+.rail .ritem{font-size:13.5px}
+.rail .ritem .ri{color:var(--muted)}
+.rail .ritem:hover .ri{color:var(--ink)}
+.rail .trophybtn.ritem{border:0;border-radius:9px}
+.rail .trophybtn.ritem svg{width:20px;height:20px}
+.rail .trophybtn.new{background:var(--accent-soft);color:var(--accent-deep)}
+.rail .trophybtn.ritem #trophyCount::after{content:" trophies";font-weight:500}
+html[data-rail="closed"] .rail .trophybtn.ritem #trophyCount::after{content:none}
+.rail .hello.ritem b{color:var(--accent);font-weight:600}
+html[data-rail="closed"] .rail{padding-inline:12px}
+html[data-rail="closed"] .rail .rl,html[data-rail="closed"] .rname{display:none}
+html[data-rail="closed"] .rbrand{flex-direction:column;gap:8px;padding-inline:0}
+html[data-rail="closed"] .rtoggle{margin-left:0}
+html[data-rail="closed"] .rtoggle svg{transform:scaleX(-1)}
+html[data-rail="closed"] .views button,html[data-rail="closed"] .rail .ritem{justify-content:center;padding:10px 0}
+html[data-rail="closed"] .rail .trophybtn.ritem{position:relative}
+html[data-rail="closed"] .rail .trophybtn.ritem #trophyCount{position:absolute;top:4px;right:6px;font-size:10px;background:var(--accent);color:#fff;border-radius:99px;min-width:16px;height:16px;line-height:16px;text-align:center;padding:0 4px}
+html[data-rail="closed"] .rail .hello.ritem .ri{color:var(--ink2)}
+.brand .textbtn .ri,.brand .hello .ri{display:none}
+@media (min-width:1161px){
+  body{padding-left:calc(var(--railw) + 24px);padding-right:24px}
+  .brand .name{display:none}
+  .brand .lbl.school{padding-left:0;border-left:0}
+  .c-ask{align-self:stretch}
+}
 .c-money,.c-groups{display:none}
 .grid[data-view="groups"]{grid-template-columns:minmax(0,1fr);grid-template-areas:"groups"}
 .grid[data-view="groups"] .c-due,.grid[data-view="groups"] .c-focus,.grid[data-view="groups"] .c-next,.grid[data-view="groups"] .c-ask,.grid[data-view="groups"] .c-money{display:none}
@@ -554,6 +592,7 @@ sup.cite{font-size:10.5px;color:var(--accent);font-weight:600;margin-left:2px;cu
 .toast.on{opacity:1;transform:translateY(0);pointer-events:auto;visibility:visible}
 .toast button{background:rgba(255,255,255,.14);border:0;color:#fff;border-radius:6px;padding:4px 10px;font-size:13px;font-weight:500}
 .toast button:hover{background:rgba(255,255,255,.24)}
+@media (min-width:1161px){.toast{left:calc(var(--railw) + 24px)}}
 .bit{position:fixed;width:8px;height:8px;border-radius:2px;pointer-events:none;z-index:60}
 .opt.fresh.correct{animation:pop .35s ease}
 .opt.fresh.wrong{animation:shake .35s ease}
@@ -705,14 +744,12 @@ sup.cite{font-size:10.5px;color:var(--accent);font-weight:600;margin-left:2px;cu
 .stat,.stat{background:var(--soft)!important;border-radius:12px;padding:10px 12px;
   box-shadow:inset 3px 3px 8px var(--sh-d),inset -3px -3px 8px var(--sh-l)}
 /* switches */
-.seg,.views{background:var(--soft);border-radius:12px;padding:4px;gap:4px;
+.seg{background:var(--soft);border-radius:12px;padding:4px;gap:4px;
   box-shadow:inset 3px 3px 7px var(--sh-d),inset -3px -3px 7px var(--sh-l)}
-.seg button,.views button{border-radius:9px;transition:box-shadow .2s,background .2s,color .2s}
+.seg button{border-radius:9px;transition:box-shadow .2s,background .2s,color .2s}
 .seg button[aria-pressed="true"]{background:var(--soft);color:var(--accent);
   box-shadow:3px 3px 7px var(--sh-d),-3px -3px 7px var(--sh-l)}
-.views button[aria-pressed="true"]{background:var(--accent);color:#fff;
-  box-shadow:3px 3px 8px rgba(35,131,226,.4),-3px -3px 7px var(--sh-l)}
-.views button:not([aria-pressed="true"]):active,.seg button:not([aria-pressed="true"]):active{box-shadow:inset 2px 2px 5px var(--sh-d)}
+.seg button:not([aria-pressed="true"]):active{box-shadow:inset 2px 2px 5px var(--sh-d)}
 
 
 /* study mode */
@@ -889,6 +926,7 @@ nav.tabs{display:none}
   .money{grid-template-columns:1fr;gap:20px}
   .mside{position:static}
   .views{display:none}
+  .rail{display:none}
   .chat{position:static;height:calc(100dvh - 176px - env(safe-area-inset-bottom,0px));min-height:0;background:transparent;border-radius:0}
   .chat .sh{padding:4px 0 10px}
   .msgs{padding:2px 0 10px;gap:12px}
@@ -935,8 +973,13 @@ nav.tabs{display:none}
 </style></head><body>
 
 <div class="wrap">
+  <aside class="rail" id="rail" aria-label="Sidebar">
+    <div class="rbrand"><span class="rmark" aria-hidden="true"></span><span class="rl rname">Clutch</span><button type="button" class="rtoggle" id="railToggle" aria-label="Collapse sidebar" title="Collapse sidebar"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16M14 10l-2 2 2 2"/></svg></button></div>
+    <nav class="views" role="group" aria-label="View" id="views"><button type="button" data-v="plan" aria-pressed="true" title="Planner"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18M9 15l2 2 4-4"/></svg><span class="rl">Planner</span></button><button type="button" data-v="money" aria-pressed="false" title="Money 101"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M15 9.5c0-1.4-1.3-2-3-2s-3 .7-3 2 1.3 1.8 3 2.2 3 1 3 2.3-1.3 2-3 2-3-.7-3-2"/></svg><span class="rl">Money 101</span></button><button type="button" data-v="ask" aria-pressed="false" title="Ask Clutch"><svg viewBox="0 0 24 24"><path d="M4 6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H9l-5 4z"/><path d="M8 9h8M8 13h5"/></svg><span class="rl">Ask Clutch</span></button><button type="button" data-v="groups" aria-pressed="false" title="Groups"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><circle cx="17" cy="9.5" r="2.5"/><path d="M2.5 19c.6-3.4 3.2-5.5 6.5-5.5s5.9 2.1 6.5 5.5M15.5 18.5c.4-2 1.6-3.4 3.6-3.6 1.4 0 2.6.9 2.4 3.6"/></svg><span class="rl">Groups</span></button></nav>
+    <div class="rfoot" id="railFoot"></div>
+  </aside>
   <header class="mast">
-    <div class="brand"><span class="name">Clutch</span><span class="lbl school">Moraine Valley · Fall 2026</span><span class="lbl" id="dateLine"></span><span class="lbl" id="demoFlag" hidden>Example data · <button type="button" class="linkbtn" id="resetDemo" title="Shift+D">Reset</button> · <button type="button" class="linkbtn" id="clearDemo">Clear list</button></span><button type="button" class="textbtn" id="aboutBtn" style="margin-left:auto">About</button><button type="button" class="trophybtn" id="trophyBtn" title="Trophies" aria-label="Trophies"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 6h3a2 2 0 0 1-2 4h-1M7 6H4a2 2 0 0 0 2 4h1"/></svg><span id="trophyCount">0</span></button><button type="button" class="hello" id="helloBtn" style="margin-left:0"></button><div class="views" role="group" aria-label="View" id="views"><button type="button" data-v="plan" aria-pressed="true">Planner</button><button type="button" data-v="money" aria-pressed="false">Money 101</button><button type="button" data-v="ask" aria-pressed="false">Ask Clutch</button><button type="button" data-v="groups" aria-pressed="false">Groups</button></div></div>
+    <div class="brand"><span class="name">Clutch</span><span class="lbl school">Moraine Valley · Fall 2026</span><span class="lbl" id="dateLine"></span><span class="lbl" id="demoFlag" hidden>Example data · <button type="button" class="linkbtn" id="resetDemo" title="Shift+D">Reset</button> · <button type="button" class="linkbtn" id="clearDemo">Clear list</button></span><button type="button" class="textbtn" id="aboutBtn" style="margin-left:auto" title="About Clutch"><svg class="ri" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><span class="rl">About</span></button><button type="button" class="trophybtn" id="trophyBtn" title="Trophies" aria-label="Trophies"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 6h3a2 2 0 0 1-2 4h-1M7 6H4a2 2 0 0 0 2 4h1"/></svg><span id="trophyCount">0</span></button><button type="button" class="hello" id="helloBtn" style="margin-left:0" title="Your setup"><svg class="ri" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c.8-3.6 4-6 8-6s7.2 2.4 8 6"/></svg><span class="rl" id="helloTxt"></span></button></div>
   </header>
 
   <div class="grid" id="grid" data-tab="due" data-view="plan">
@@ -962,6 +1005,19 @@ nav.tabs{display:none}
         <div class="filters" id="filters"></div>
         <div id="list"></div>
       </section>
+      <section class="block" aria-label="Study blocks">
+        <div class="sh"><h2>Next 7 days</h2><div class="aside"><span class="sub num" id="weekRange"></span></div></div>
+        <div class="week" id="week"></div>
+        <form class="blkadd" id="blkForm">
+          <label class="sr" for="bDay">Day</label><select id="bDay"></select>
+          <label class="sr" for="bStart">Start</label><input id="bStart" type="time" value="19:00" required>
+          <label class="sr" for="bMin">Minutes</label>
+          <select id="bMin"><option value="30">30 min</option><option value="45">45 min</option><option value="60" selected>1 hr</option><option value="90">1.5 hr</option><option value="120">2 hr</option></select>
+          <label class="sr" for="bLabel">Label</label><input id="bLabel" class="wide" placeholder="What you'll study" required maxlength="40">
+          <button class="btn solid" type="submit">Block time</button>
+        </form>
+      </section>
+
     </div>
 
     <div class="col c-focus">
@@ -988,19 +1044,6 @@ nav.tabs{display:none}
           </div>
           <div class="fchart" id="fchart" aria-label="Focus minutes, last 7 days"></div>
         </div>
-      </section>
-
-      <section class="block" aria-label="Study blocks">
-        <div class="sh"><h2>Next 7 days</h2><div class="aside"><span class="sub num" id="weekRange"></span></div></div>
-        <div class="week" id="week"></div>
-        <form class="blkadd" id="blkForm">
-          <label class="sr" for="bDay">Day</label><select id="bDay"></select>
-          <label class="sr" for="bStart">Start</label><input id="bStart" type="time" value="19:00" required>
-          <label class="sr" for="bMin">Minutes</label>
-          <select id="bMin"><option value="30">30 min</option><option value="45">45 min</option><option value="60" selected>1 hr</option><option value="90">1.5 hr</option><option value="120">2 hr</option></select>
-          <label class="sr" for="bLabel">Label</label><input id="bLabel" class="wide" placeholder="What you'll study" required maxlength="40">
-          <button class="btn solid" type="submit">Block time</button>
-        </form>
       </section>
 
       <section class="block" aria-label="Flashcards">
@@ -1236,7 +1279,7 @@ function renderHeader(){
   const d = new Date();
   $('#dateLine').textContent = `${LONGDAYS[d.getDay()]}, ${FULLMONTHS[d.getMonth()]} ${d.getDate()}`;
   $('#demoFlag').hidden = !S.example;
-  $('#helloBtn').innerHTML = S.profile && S.profile.name ? `Hi, <b>${esc(S.profile.name)}</b>` : 'Set up';
+  $('#helloTxt').innerHTML = S.profile && S.profile.name ? `Hi, <b>${esc(S.profile.name)}</b>` : 'Set up';
   $('#courseList').innerHTML = ((S.profile && S.profile.courses) || []).map(c=>`<option value="${esc(c)}">`).join('');
 }
 $('#clearDemo').onclick = () => {
@@ -1611,6 +1654,16 @@ function setView(v, fromTab){
   $('#box').placeholder = v==='money' ? 'Ask about money or a quiz' : 'Ask about your week or a class';
 }
 $('#views').onclick = e => { const b = e.target.closest('[data-v]'); if(b) setView(b.dataset.v); };
+/* left rail: open/closed, remembered; About / trophies / Set up live in the rail on desktop and in the header on phones */
+(function(){
+  const html = document.documentElement, foot = $('#railFoot'), brand = document.querySelector('.brand');
+  let pref = null; try { pref = localStorage.getItem('clutch.rail'); } catch(e){}
+  const apply = () => { html.dataset.rail = pref || (innerWidth < 1400 ? 'closed' : 'open'); $('#railToggle').setAttribute('aria-label', html.dataset.rail==='closed' ? 'Expand sidebar' : 'Collapse sidebar'); };
+  $('#railToggle').onclick = () => { pref = html.dataset.rail === 'closed' ? 'open' : 'closed'; try { localStorage.setItem('clutch.rail', pref); } catch(e){} apply(); };
+  const place = () => { const desk = innerWidth > 1160; const ids = desk ? ['trophyBtn','helloBtn','aboutBtn'] : ['aboutBtn','trophyBtn','helloBtn'];
+    ids.forEach(id => { const el = $('#'+id); if (!el) return; if (desk && el.parentElement !== foot){ el.classList.add('ritem'); el.style.marginLeft = ''; foot.append(el); } else if (!desk && el.parentElement === foot){ el.classList.remove('ritem'); brand.append(el); if (id==='aboutBtn') el.style.marginLeft = 'auto'; } }); };
+  apply(); place(); addEventListener('resize', () => { apply(); place(); });
+})();
 document.querySelector('nav.tabs').onclick = e => { const b = e.target.closest('[data-tab]'); if(b) switchTab(b.dataset.tab); };
 
 /* ---------- trophies ---------- */
