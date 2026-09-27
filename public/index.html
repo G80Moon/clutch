@@ -94,6 +94,10 @@ section.block+section.block{margin-top:36px}
 .verdict.bad{color:var(--late)} .verdict.mid{color:var(--soon)} .verdict.good{color:var(--ok)}
 
 /* filters, Notion view tabs */
+.bell{display:none;width:30px;height:30px;border:0;background:none;border-radius:8px;color:var(--muted);place-items:center}
+.bell svg{width:17px;height:17px}
+.bell:hover{background:var(--hover);color:var(--ink)}
+.bell[aria-pressed="true"]{color:var(--accent);background:var(--accent-soft)}
 .filters{display:flex;gap:2px;flex-wrap:wrap;padding:14px 0 0;border-bottom:1px solid var(--line)}
 .filters button{background:none;border:0;padding:5px 8px 7px;font-size:13.5px;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;border-radius:6px 6px 0 0}
 .filters button:hover{background:var(--hover)}
@@ -369,6 +373,9 @@ html[data-rail="closed"] .rail .hello.ritem .ri{color:var(--ink2)}
   .brand .name{display:none}
   .brand .lbl.school{padding-left:0;border-left:0}
   .c-ask{align-self:stretch}
+  .msgs .daycard{display:none}
+  #soon{display:none!important}
+  .bell{display:grid}
 }
 .c-money,.c-groups{display:none}
 .grid[data-view="groups"]{grid-template-columns:minmax(0,1fr);grid-template-areas:"groups"}
@@ -560,9 +567,9 @@ sup.cite{font-size:10.5px;color:var(--accent);font-weight:600;margin-left:2px;cu
 .grid[data-view="money"] .c-next{display:none}
 
 /* next up card */
-.next{background:var(--accent);color:#fff;border-radius:16px;padding:22px 26px 26px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px 32px;align-items:center;position:relative;overflow:hidden;box-shadow:0 14px 34px -18px rgba(35,131,226,.75)}
+.next{background:var(--accent);color:#fff;border-radius:16px;padding:18px 24px 22px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px 32px;align-items:center;position:relative;overflow:hidden;box-shadow:0 14px 34px -18px rgba(35,131,226,.75)}
 .next::before{content:"";position:absolute;right:-80px;top:-120px;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.2),transparent 68%);pointer-events:none}
-.next .hi{font-size:14px;margin:0 0 12px;opacity:.9}
+.next .hi{font-size:13.5px;margin:0 0 8px;opacity:.85}
 .next .eyebrow{font-size:11.5px;text-transform:uppercase;letter-spacing:.09em;font-weight:600;opacity:.75}
 .next h2{font-family:var(--display);font-size:clamp(24px,2.6vw,32px);font-weight:800;letter-spacing:-.02em;margin:4px 0 6px;line-height:1.2;text-wrap:balance}
 .next .why{font-size:14.5px;margin:0;opacity:.92;max-width:60ch}
@@ -715,7 +722,7 @@ sup.cite{font-size:10.5px;color:var(--accent);font-weight:600;margin-left:2px;cu
 
 /* soft (neumorphic) accents: timer + switches only */
 :root{--soft:#EEF0F4;--sh-d:rgba(163,174,194,.55);--sh-l:#FFFFFF}
-.timer{background:var(--soft);border:0;border-radius:20px;padding:22px;gap:18px;
+.timer{background:var(--soft);border:0;border-radius:20px;padding:20px;gap:16px;
   box-shadow:9px 9px 20px var(--sh-d),-9px -9px 20px var(--sh-l)}
 .clockrow{background:var(--soft);border-radius:16px;padding:16px 20px;
   box-shadow:inset 5px 5px 12px var(--sh-d),inset -5px -5px 12px var(--sh-l)}
@@ -741,8 +748,10 @@ sup.cite{font-size:10.5px;color:var(--accent);font-weight:600;margin-left:2px;cu
 .fbar.today i{background:var(--accent)}
 .fbar span{font-size:10.5px;color:var(--muted);line-height:1}
 .fbar.today span{color:var(--accent-deep);font-weight:600}
-.stat,.stat{background:var(--soft)!important;border-radius:12px;padding:10px 12px;
-  box-shadow:inset 3px 3px 8px var(--sh-d),inset -3px -3px 8px var(--sh-l)}
+.stats{gap:0;border-top:1px solid rgba(163,174,194,.35);padding-top:12px}
+.stat{background:none!important;border-radius:0;padding:0 4px;text-align:center;border-left:1px solid rgba(163,174,194,.35)}
+.stat:first-child{border-left:0}
+.fchart{background:none;box-shadow:none;padding:0 4px}
 /* switches */
 .seg{background:var(--soft);border-radius:12px;padding:4px;gap:4px;
   box-shadow:inset 3px 3px 7px var(--sh-d),inset -3px -3px 7px var(--sh-l)}
@@ -986,7 +995,7 @@ nav.tabs{display:none}
     <div class="col c-next"><section class="next" id="nextCard" aria-label="Next up"></section></div>
     <div class="col c-due">
       <section class="block" aria-label="Assignments">
-        <div class="sh"><h2>Due</h2><div class="aside"><span class="sub" id="openCount"></span><button class="textbtn" type="button" id="toggleAdd">Add assignment</button></div></div>
+        <div class="sh"><h2>Due</h2><div class="aside"><span class="sub" id="openCount"></span><button class="textbtn" type="button" id="toggleAdd">Add assignment</button><button type="button" class="bell" id="bellBtn" title="Turn on due-soon alerts" aria-label="Turn on due-soon alerts" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg></button></div></div>
         <div class="load" id="meter"></div>
         <div class="soon" id="soon" hidden></div>
         <form class="add" id="addForm" hidden>
@@ -1388,7 +1397,7 @@ function dueChip(a){
   const n = diffDays(a.due);
   if (a.done) return `<span class="due">done</span>`;
   if (n < 0) return `<span class="due late">${-n}d late</span>`;
-  if (n === 0) return `<span class="due today">Today</span>`;
+  if (n === 0){ const h = hoursLeft(a); return `<span class="due today">Today${h>=0&&h<24?` · ${h<1?Math.max(1,Math.round(h*60))+' min':Math.round(h)+'h'} left`:''}</span>`; }
   if (n === 1) return `<span class="due soon">Tomorrow</span>`;
   if (n < 7) return `<span class="due${n<=3?' soon':''}">${DAYS[dayIdx(parse(a.due))]} ${parse(a.due).getDate()}</span>`;
   return `<span class="due">${fmtShort(a.due)}</span>`;
@@ -1750,7 +1759,9 @@ function renderSoon(){
   el.innerHTML = `<div class="sh2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Due soon<button type="button" class="textbtn" id="alertsBtn">${AL.on?'Alerts on':'Turn on alerts'}</button></div>` +
     list.map(a=>{ const h = hoursLeft(a); return `<div class="si"><span><b>${esc(a.title)}</b><span class="lbl">${esc(a.course)} · ${h<0?'was due':'due'} ${fmtDueWhen(a)}</span></span><span class="left${h<0?' late':h>24?' calm':''}">${fmtLeft(h)}</span></div>`; }).join('');
   $('#alertsBtn').onclick = toggleAlerts;
+  const bell = $('#bellBtn'); if (bell){ bell.setAttribute('aria-pressed', String(!!AL.on)); bell.title = bell.ariaLabel = AL.on ? 'Due-soon alerts are on. Click to turn off' : 'Turn on due-soon alerts'; }
 }
+$('#bellBtn').onclick = toggleAlerts;
 function canNotify(){ return typeof Notification !== 'undefined'; }
 function notify(title, body){
   try { if (canNotify() && Notification.permission==='granted'){ const n = new Notification(title, {body, tag:'clutch-'+title, icon:getComputedStyle(document.documentElement).getPropertyValue('--markimg').trim().replace(/^url\("?|"?\)$/g,'')}); n.onclick = () => { try { window.focus(); } catch(e){} n.close(); }; return true; } } catch(e){}
