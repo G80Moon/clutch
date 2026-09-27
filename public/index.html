@@ -1,3 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FBFBFA">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Clutch">
+<meta property="og:title" content="Clutch">
+<meta property="og:description" content="A planner for Moraine Valley students: assignments, focus timer, study blocks, flashcards, practice tests, Money 101, and an AI coach that knows your week.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://clutch-mvcc.pages.dev/">
+<meta property="og:image" content="https://clutch-mvcc.pages.dev/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='24' height='24' rx='6.5' fill='%232383E2'/%3E%3Cpath d='M6.5 12.6l4 4 7-8.2' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta charset="utf-8">
 <title>Clutch Planner</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -864,8 +880,12 @@ nav.tabs{display:none}
 }
 @media (max-width:560px){
   .brand .lbl.school{display:none}
+  .brand #demoFlag{display:none}
+  .brand #dateLine{display:none}
+  .brand{gap:6px 8px}
+  .brand .hello{margin-left:0;padding:3px 6px}
   .trophybtn{margin-left:auto}
-  #aboutBtn{margin-left:0!important}
+  #aboutBtn{margin-left:0!important;padding:3px 6px}
   .clock{font-size:56px}
   .trow{grid-template-columns:1fr 1fr}
   .trow select{grid-column:1/-1}
@@ -876,6 +896,9 @@ nav.tabs{display:none}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
+</head>
+<body>
+
 
 <div class="wrap">
   <header class="mast">
@@ -2997,3 +3020,6 @@ if (!S.profile) showLand();
 booted = true; checkAch(true); // everything is defined now; sets the trophy count on first paint
 })();
 </script>
+
+</body>
+</html>
