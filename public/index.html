@@ -2842,13 +2842,22 @@ function bindDeck(el){
     else if (b.dataset.dk==='study'){ const saved = decks().find(x=>x.id===d.savedId) || saveDeck(d, d.src||'photo'); d.savedId = saved.id; studyDeck(saved); }
   });
 }
+async function photoHash(file){ try { const buf = await file.arrayBuffer(); const h = await crypto.subtle.digest('SHA-256', buf); return Array.from(new Uint8Array(h)).slice(0,12).map(b=>b.toString(16).padStart(2,'0')).join(''); } catch(e){ return null; } }
 async function makeCards(file){
   if (busy) return;
   const url = URL.createObjectURL(file);
+  const hash = await photoHash(file);
+  const seen = hash && decks().find(d=>d.photo===hash);
+  if (seen){
+    addMsg('me', `<div class="ph"><img src="${url}" alt="Your notes"><span>Make flashcards from these notes</span></div>`);
+    const b2 = addMsg('bot', md(`You already made a deck from this exact photo: **${seen.topic}**, ${seen.cards.length} cards. Here it is again, no need to re-read it.`));
+    const view = {topic:seen.topic, course:seen.course, cards:seen.cards, savedId:seen.id, src:'photo'}; const id = 'd'+Date.now(); DECKS[id] = view;
+    const wrap = document.createElement('div'); wrap.innerHTML = deckHTML(view, id); const deck = wrap.firstElementChild; b2.after(deck); bindDeck(deck); msgs.scrollTop = msgs.scrollHeight; return;
+  }
   addMsg('me', `<div class="ph"><img src="${url}" alt="Your notes"><span>Make flashcards from these notes</span></div>`);
   const bubble = addMsg('bot thinking', DOTS);
   const finish = (d, note) => {
-    bubble.className = 'msg bot'; const id = 'd'+Date.now(); DECKS[id] = d; const saved = saveDeck(d, 'photo'); d.savedId = saved.id;
+    bubble.className = 'msg bot'; const id = 'd'+Date.now(); DECKS[id] = d; const saved = saveDeck(d, 'photo'); d.savedId = saved.id; if (hash && d !== DEMO_DECK){ saved.photo = hash; save(); }
     bodyOf(bubble).innerHTML = md(note);
     const wrap = document.createElement('div'); wrap.innerHTML = deckHTML(d, id); const deck = wrap.firstElementChild; bubble.after(deck); bindDeck(deck); msgs.scrollTop = msgs.scrollHeight;
   };
@@ -2857,7 +2866,7 @@ async function makeCards(file){
   if (!imagesOK){ bubble.className = 'msg bot err'; bodyOf(bubble).textContent = 'This view can\'t send photos to Claude. Try opening Clutch on claude.ai in a regular browser tab.'; return; }
   busy = true; ctl = new AbortController(); setSendState('stop'); ptBtn.disabled = true;
   try {
-    const d = await sample.json(`This is a photo of a college student's class notes, slides, or an assignment. Make 6 to 10 flashcards from what is actually written in it. Questions should test understanding (why, how, compare), not just copy a line. Answers are one or two sentences. Guess the course from context if you can (like "PSY 101"), otherwise null. If the image is not notes or is unreadable, reply {"error":"one short sentence saying why"}. Reply with only JSON in this shape: {"topic":"short title","course":"PSY 101 or null","cards":[{"q":"question","a":"answer"}]}`, {images:[file], signal:ctl.signal});
+    const d = await sample.json(`This is a photo of a college student's class notes, slides, or an assignment. Make exactly 8 flashcards from what is actually written in it (fewer only if the page genuinely has less than 8 ideas). Cover the whole page top to bottom, in order. Questions should test understanding (why, how, compare), not just copy a line. Answers are one or two sentences. Guess the course from context if you can (like "PSY 101"), otherwise null. If the image is not notes or is unreadable, reply {"error":"one short sentence saying why"}. Reply with only JSON in this shape: {"topic":"short title","course":"PSY 101 or null","cards":[{"q":"question","a":"answer"}]}`, {images:[file], signal:ctl.signal});
     if (!d || d.error || !Array.isArray(d.cards) || !d.cards.length) throw {code:'bad', message:(d&&d.error)||'no cards'};
     d.cards = d.cards.slice(0,10).map(c=>({q:String(c.q||''), a:String(c.a||'')})).filter(c=>c.q&&c.a);
     finish(d, `Here's your deck${d.course?` for ${d.course}`:''}. Tap a card to flip it, and hit "Quiz me" when you want me to run you through them.`);
