@@ -58,7 +58,7 @@ header.mast{padding-bottom:18px}
 .linkbtn:hover{color:var(--ink)}
 
 /* columns */
-.grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(340px,.95fr);gap:40px;align-items:start}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(380px,.64fr);gap:40px;align-items:start}
 .col{display:flex;flex-direction:column;min-width:0}
 section.block+section.block{margin-top:36px}
 .sh{display:flex;align-items:center;gap:12px;margin-bottom:10px;min-height:34px}
@@ -556,8 +556,15 @@ sup.cite{font-size:10.5px;color:var(--accent);font-weight:600;margin-left:2px;cu
 
 
 /* grid areas */
-.grid{grid-template-areas:"next next ask" "due focus ask";row-gap:30px}
-.c-next{grid-area:next}.c-due{grid-area:due}.c-focus{grid-area:focus}.c-ask{grid-area:ask}.c-money{grid-area:money}
+.grid{grid-template-areas:"next ask" "due ask";row-gap:26px}
+.c-next{grid-area:next}.c-due{grid-area:due}.c-focus{grid-area:focus}.c-ask{grid-area:ask}.c-money{grid-area:money}.c-week{grid-area:week}.c-study{grid-area:study}
+.c-focus,.c-week,.c-study{display:none}
+.grid[data-view="focus"]{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);grid-template-areas:"focus week";max-width:1160px;width:100%;margin:0 auto}
+.grid[data-view="focus"] .c-next,.grid[data-view="focus"] .c-due,.grid[data-view="focus"] .c-ask{display:none}
+.grid[data-view="focus"] .c-focus,.grid[data-view="focus"] .c-week{display:flex}
+.grid[data-view="study"]{grid-template-columns:minmax(0,1fr);grid-template-areas:"study";max-width:1160px;width:100%;margin:0 auto}
+.grid[data-view="study"] .c-next,.grid[data-view="study"] .c-due,.grid[data-view="study"] .c-ask{display:none}
+.grid[data-view="study"] .c-study{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:40px;align-items:start}
 .grid[data-view="money"]{grid-template-columns:minmax(0,1fr);grid-template-areas:"money"}
 .grid[data-view="money"] .c-ask{display:none}
 .grid[data-view="money"] .money{max-width:1080px;width:100%;margin:0 auto}
@@ -923,8 +930,10 @@ nav.tabs{display:none}
 @media (max-width:1160px){
   .grid{grid-template-columns:1fr;gap:0}
   .col{display:none}
-  .grid[data-tab="due"] .c-due,.grid[data-tab="focus"] .c-focus,.grid[data-tab="ask"] .c-ask,.grid[data-tab="money"] .c-money,.grid[data-tab="groups"] .c-groups{display:flex}
-  .grid[data-view]{grid-template-columns:1fr;grid-template-areas:none}
+  .grid[data-tab="due"] .c-due,.grid[data-tab="due"] .c-week,.grid[data-tab="focus"] .c-focus,.grid[data-tab="focus"] .c-study,.grid[data-tab="ask"] .c-ask,.grid[data-tab="money"] .c-money,.grid[data-tab="groups"] .c-groups{display:flex}
+  .grid[data-view]{grid-template-columns:1fr;grid-template-areas:none;max-width:none}
+  .grid[data-view="study"] .c-study{display:none}
+  .grid[data-tab="focus"] .c-study{display:flex}
   .grid .col{grid-area:auto}
   .grid[data-tab="due"] .c-next{display:flex}
   .next{grid-template-columns:1fr}
@@ -984,7 +993,7 @@ nav.tabs{display:none}
 <div class="wrap">
   <aside class="rail" id="rail" aria-label="Sidebar">
     <div class="rbrand"><span class="rmark" aria-hidden="true"></span><span class="rl rname">Clutch</span><button type="button" class="rtoggle" id="railToggle" aria-label="Collapse sidebar" title="Collapse sidebar"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16M14 10l-2 2 2 2"/></svg></button></div>
-    <nav class="views" role="group" aria-label="View" id="views"><button type="button" data-v="plan" aria-pressed="true" title="Planner"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18M9 15l2 2 4-4"/></svg><span class="rl">Planner</span></button><button type="button" data-v="money" aria-pressed="false" title="Money 101"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M15 9.5c0-1.4-1.3-2-3-2s-3 .7-3 2 1.3 1.8 3 2.2 3 1 3 2.3-1.3 2-3 2-3-.7-3-2"/></svg><span class="rl">Money 101</span></button><button type="button" data-v="ask" aria-pressed="false" title="Ask Clutch"><svg viewBox="0 0 24 24"><path d="M4 6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H9l-5 4z"/><path d="M8 9h8M8 13h5"/></svg><span class="rl">Ask Clutch</span></button><button type="button" data-v="groups" aria-pressed="false" title="Groups"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><circle cx="17" cy="9.5" r="2.5"/><path d="M2.5 19c.6-3.4 3.2-5.5 6.5-5.5s5.9 2.1 6.5 5.5M15.5 18.5c.4-2 1.6-3.4 3.6-3.6 1.4 0 2.6.9 2.4 3.6"/></svg><span class="rl">Groups</span></button></nav>
+    <nav class="views" role="group" aria-label="View" id="views"><button type="button" data-v="plan" aria-pressed="true" title="Planner"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18M9 15l2 2 4-4"/></svg><span class="rl">Planner</span></button><button type="button" data-v="focus" aria-pressed="false" title="Focus"><svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6M12 2v3"/></svg><span class="rl">Focus</span></button><button type="button" data-v="study" aria-pressed="false" title="Study"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="14" height="12" rx="2"/><path d="M7 7V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-2M7 12h6M7 15h4"/></svg><span class="rl">Study</span></button><button type="button" data-v="money" aria-pressed="false" title="Money 101"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M15 9.5c0-1.4-1.3-2-3-2s-3 .7-3 2 1.3 1.8 3 2.2 3 1 3 2.3-1.3 2-3 2-3-.7-3-2"/></svg><span class="rl">Money 101</span></button><button type="button" data-v="ask" aria-pressed="false" title="Ask Clutch"><svg viewBox="0 0 24 24"><path d="M4 6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H9l-5 4z"/><path d="M8 9h8M8 13h5"/></svg><span class="rl">Ask Clutch</span></button><button type="button" data-v="groups" aria-pressed="false" title="Groups"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><circle cx="17" cy="9.5" r="2.5"/><path d="M2.5 19c.6-3.4 3.2-5.5 6.5-5.5s5.9 2.1 6.5 5.5M15.5 18.5c.4-2 1.6-3.4 3.6-3.6 1.4 0 2.6.9 2.4 3.6"/></svg><span class="rl">Groups</span></button></nav>
     <div class="rfoot" id="railFoot"></div>
   </aside>
   <header class="mast">
@@ -1014,6 +1023,8 @@ nav.tabs{display:none}
         <div class="filters" id="filters"></div>
         <div id="list"></div>
       </section>
+    </div>
+    <div class="col c-week">
       <section class="block" aria-label="Study blocks">
         <div class="sh"><h2>Next 7 days</h2><div class="aside"><span class="sub num" id="weekRange"></span></div></div>
         <div class="week" id="week"></div>
@@ -1055,6 +1066,8 @@ nav.tabs{display:none}
         </div>
       </section>
 
+    </div>
+    <div class="col c-study">
       <section class="block" aria-label="Flashcards">
         <div class="sh"><h2>Flashcards</h2><div class="aside"><span class="sub" id="deckCount"></span><button class="textbtn" type="button" id="deckNew">New deck from a photo</button></div></div>
         <div class="decks" id="decks"></div>
@@ -1645,16 +1658,20 @@ function renderFocusChart(){
 }
 
 /* ---------- tabs ---------- */
+const TAB_OF_VIEW = {plan:'due', focus:'focus', study:'focus', money:'money', ask:'ask', groups:'groups'};
+function markTab(t){ $('#grid').dataset.tab = t; document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-selected', b.dataset.tab===t)); }
 function switchTab(t){
-  $('#grid').dataset.tab = t;
-  if (t==='money') setView('money', true); else if (t==='groups') setView('groups', true); else if (t==='ask'){ if ($('#grid').dataset.view==='money' || $('#grid').dataset.view==='groups') setView('ask', true); } else setView('plan', true);
-  document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-selected', b.dataset.tab===t));
+  markTab(t);
+  const v = $('#grid').dataset.view;
+  if (t==='ask'){ if (v!=='plan' && v!=='ask') setView('ask', true); }
+  else if (t==='focus'){ if (v!=='focus' && v!=='study') setView('focus', true); }
+  else setView(t==='due' ? 'plan' : t, true);
 }
 function setView(v, fromTab){
   if ($('#grid').dataset.view === v) return;
   $('#grid').dataset.view = v;
   document.querySelectorAll('#views button').forEach(b=>b.setAttribute('aria-pressed', b.dataset.v===v));
-  if (!fromTab) switchTab(v==='money'?'money':v==='ask'?'ask':v==='groups'?'groups':'due');
+  if (!fromTab) markTab(TAB_OF_VIEW[v] || 'due');
   if (v==='ask') setTimeout(()=>$('#box').focus(), 50);
   setTimeout(()=>{ fitChat(); msgs.scrollTop = msgs.scrollHeight; }, 0);
   if (v==='money') renderMoney();
