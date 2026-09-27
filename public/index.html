@@ -40,12 +40,12 @@ body{background:var(--bg);color:var(--ink);font:14px/1.5 var(--sans);padding-inl
 button,input,select,textarea{font:inherit;color:inherit;border-radius:8px}
 button{cursor:pointer}
 :focus-visible{outline:2px solid rgba(35,131,226,.5);outline-offset:1px;border-radius:4px}
-.wrap{max-width:1360px;margin:0 auto;padding-block:28px 32px}
+.wrap{max-width:1400px;margin:0 auto;padding-block:20px 24px}
 .lbl{font-size:12px;color:var(--muted);font-weight:500}
 .num{font-variant-numeric:tabular-nums}
 
 /* page title */
-header.mast{padding-bottom:22px}
+header.mast{padding-bottom:18px}
 .brand{display:flex;align-items:center;gap:8px 10px;flex-wrap:wrap;font-size:14px;color:var(--ink2)}
 .brand .name{font-weight:700;color:var(--ink);font-size:15px}
 .brand .name{font-family:var(--display);font-weight:700;font-size:17px;letter-spacing:-.01em}
@@ -192,8 +192,12 @@ form.blkadd{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;p
 form.blkadd .wide{grid-column:1/3}
 
 /* chat */
-.chat{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px);height:calc(100dvh - 110px);min-height:520px;display:flex;flex-direction:column;background:var(--side);border-radius:12px}
-.chat .sh{padding:14px 16px 10px;margin:0}
+.chat{position:sticky;top:12px;height:calc(100dvh - 100px);min-height:0;display:flex;flex-direction:column;background:var(--side);border-radius:12px}
+.chat .sh{padding:12px 16px 8px;margin:0}
+.chat .sh h2{white-space:nowrap}
+.chat .sh .aside{min-width:0}
+.chat .sh .status{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.chat .sh #newChat{white-space:nowrap;flex:none}
 .status{font-size:12px;color:var(--muted)}
 .status.on::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--ok);margin-right:6px;vertical-align:1px}
 .msgs{flex:1;overflow-y:auto;padding:4px 16px 12px;display:flex;flex-direction:column;gap:14px}
@@ -509,10 +513,10 @@ sup.cite{font-size:10.5px;color:var(--accent);font-weight:600;margin-left:2px;cu
 /* grid areas */
 .grid{grid-template-areas:"next next ask" "due focus ask";row-gap:30px}
 .c-next{grid-area:next}.c-due{grid-area:due}.c-focus{grid-area:focus}.c-ask{grid-area:ask}.c-money{grid-area:money}
-.grid[data-view="money"]{grid-template-areas:"money"}
+.grid[data-view="money"]{grid-template-columns:minmax(0,1fr);grid-template-areas:"money"}
 .grid[data-view="money"] .c-ask{display:none}
 .grid[data-view="money"] .money{max-width:1080px;width:100%;margin:0 auto}
-.grid[data-view="ask"]{grid-template-columns:minmax(0,760px);justify-content:center;grid-template-areas:"ask"}
+.grid[data-view="ask"]{grid-template-columns:minmax(0,900px);justify-content:center;grid-template-areas:"ask"}
 .grid[data-view="ask"] .chat{height:calc(100dvh - 126px)}
 .grid[data-view="ask"] .c-next,.grid[data-view="ask"] .c-due,.grid[data-view="ask"] .c-focus,.grid[data-view="ask"] .c-money{display:none}
 .grid[data-view="money"] .c-next{display:none}
@@ -546,8 +550,8 @@ sup.cite{font-size:10.5px;color:var(--accent);font-weight:600;margin-left:2px;cu
 .item.completing .check svg{opacity:1;stroke:#fff}
 .item.completing .t{text-decoration:line-through;color:var(--muted)}
 @keyframes complete{0%{opacity:1;transform:none}60%{opacity:1;transform:translateX(6px)}100%{opacity:0;transform:translateX(24px)}}
-.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);opacity:0;pointer-events:none;visibility:hidden;background:var(--ink);color:#fff;padding:10px 12px 10px 16px;border-radius:12px;font-size:14px;display:flex;gap:12px;align-items:center;box-shadow:0 12px 30px -10px rgba(0,0,0,.35);transition:opacity .2s,transform .2s;z-index:50;max-width:calc(100vw - 32px)}
-.toast.on{opacity:1;transform:translate(-50%,0);pointer-events:auto;visibility:visible}
+.toast{position:fixed;left:24px;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateY(20px);opacity:0;pointer-events:none;visibility:hidden;background:var(--ink);color:#fff;padding:10px 12px 10px 16px;border-radius:12px;font-size:14px;display:flex;gap:12px;align-items:center;box-shadow:0 12px 30px -10px rgba(0,0,0,.35);transition:opacity .2s,transform .2s;z-index:50;max-width:calc(100vw - 32px)}
+.toast.on{opacity:1;transform:translateY(0);pointer-events:auto;visibility:visible}
 .toast button{background:rgba(255,255,255,.14);border:0;color:#fff;border-radius:6px;padding:4px 10px;font-size:13px;font-weight:500}
 .toast button:hover{background:rgba(255,255,255,.24)}
 .bit{position:fixed;width:8px;height:8px;border-radius:2px;pointer-events:none;z-index:60}
@@ -880,7 +884,7 @@ nav.tabs{display:none}
   .next{grid-template-columns:1fr}
   .c-next{margin-bottom:22px}
   .brand #demoFlag{border-left:0;padding-left:0}
-  .toast{bottom:auto;top:calc(10px + env(safe-area-inset-top,0px));transform:translate(-50%,-16px)}
+  .toast{left:50%;bottom:auto;top:calc(10px + env(safe-area-inset-top,0px));transform:translate(-50%,-16px)}
   .toast.on{transform:translate(-50%,0)}
   .money{grid-template-columns:1fr;gap:20px}
   .mside{position:static}
@@ -1600,6 +1604,7 @@ function setView(v, fromTab){
   document.querySelectorAll('#views button').forEach(b=>b.setAttribute('aria-pressed', b.dataset.v===v));
   if (!fromTab) switchTab(v==='money'?'money':v==='ask'?'ask':v==='groups'?'groups':'due');
   if (v==='ask') setTimeout(()=>$('#box').focus(), 50);
+  setTimeout(()=>{ fitChat(); msgs.scrollTop = msgs.scrollHeight; }, 0);
   if (v==='money') renderMoney();
   if (v==='groups') renderGroups();
   if (!suggestEl.hidden) renderSuggest();
@@ -2875,6 +2880,12 @@ async function makeCards(file){
 }
 $('#box').addEventListener('keydown', e => { if (e.key==='Enter' && !e.shiftKey){ e.preventDefault(); if(!busy) send(); } });
 
+const chatEl = document.querySelector('.chat'), askCol = document.querySelector('.c-ask');
+let fitRaf = 0;
+function fitChat(){ fitRaf = 0; if (!chatEl || !askCol) return; if (innerWidth <= 1160){ chatEl.style.height = ''; return; }
+  const top = Math.max(12, askCol.getBoundingClientRect().top); chatEl.style.height = Math.max(420, innerHeight - top - 16) + 'px'; }
+const fitSoon = () => { if (!fitRaf) fitRaf = requestAnimationFrame(fitChat); };
+addEventListener('scroll', fitSoon, {passive:true}); addEventListener('resize', fitSoon); fitSoon();
 function planCard(){
   const c = turnChanges, n = c.assignments.length + c.blocks.length + c.completed.length; if (!n) return;
   const parts = [];
