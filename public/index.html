@@ -213,13 +213,21 @@ form.blkadd .wide{grid-column:1/3}
 .suggest button{background:none;border:0;padding:6px 6px;border-radius:8px;text-align:left;font-size:13.5px;color:var(--ink2)}
 .suggest button::before{content:"↳";color:var(--accent);margin-right:8px}
 .suggest button:hover{background:var(--accent-soft);color:var(--accent-deep)}
-form.send{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:10px 12px 12px;border-top:1px solid var(--line2)}
-form.send textarea{resize:none;height:38px;padding:8px 10px}
-form.send{grid-template-columns:auto minmax(0,1fr) auto}
-.iconbtn{width:38px;height:38px;border:1px solid var(--line2);background:var(--field);border-radius:8px;display:grid;place-items:center;color:var(--ink2);position:relative;box-shadow:0 1px 2px rgba(15,15,15,.04)}
-.iconbtn:hover{border-color:var(--accent);color:var(--accent)}
-.iconbtn svg{width:17px;height:17px}
-.iconbtn .pl{position:absolute;top:-6px;right:-6px;font-size:9px;font-weight:700;background:var(--accent);color:#fff;border-radius:5px;padding:1px 4px;line-height:1.2}
+form.send{display:block;padding:8px 12px 12px}
+.composer{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:end;gap:2px;background:var(--field);border:1px solid var(--line2);border-radius:22px;padding:4px 4px 4px 4px;box-shadow:0 1px 2px rgba(15,15,15,.04);transition:box-shadow .15s,border-color .15s}
+.composer:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(35,131,226,.14)}
+.composer textarea{resize:none;border:0;background:transparent;box-shadow:none;height:36px;max-height:132px;padding:8px 6px;font-size:15px;line-height:1.35;border-radius:0}
+.composer textarea:focus{border:0;box-shadow:none;outline:none}
+.iconbtn{width:36px;height:36px;border:0;background:transparent;border-radius:50%;display:grid;place-items:center;color:var(--muted);position:relative;flex:none}
+.iconbtn:hover{background:var(--hover);color:var(--accent)}
+.iconbtn svg{width:18px;height:18px}
+.iconbtn .pl{position:absolute;top:1px;right:1px;font-size:8.5px;font-weight:700;background:var(--accent);color:#fff;border-radius:4px;padding:0 3px;line-height:1.3}
+.sendbtn{width:36px;height:36px;border-radius:50%;background:var(--accent);color:#fff;border:0;display:grid;place-items:center;flex:none;transition:background .15s,transform .1s}
+.sendbtn:hover{background:var(--accent-deep)}
+.sendbtn:active{transform:scale(.94)}
+.sendbtn svg{width:16px;height:16px}
+.sendbtn[data-state="stop"]{background:var(--ink)}
+.sendbtn:disabled{opacity:.4}
 .msg.me .body .ph{display:grid;gap:6px}
 .msg.me .body .ph img{display:block;max-width:180px;max-height:140px;border-radius:8px;object-fit:cover;border:1px solid rgba(255,255,255,.35)}
 .deck{margin-left:34px;background:var(--field);border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;gap:10px;animation:rise .3s ease-out}
@@ -549,6 +557,7 @@ sup.cite{font-size:10.5px;color:var(--accent);font-weight:600;margin-left:2px;cu
 
 /* chat alive */
 .daycard{background:var(--field);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:8px;margin-bottom:2px;animation:rise .3s ease-out}
+.dstrip{display:none}
 .daycard .dch{display:flex;justify-content:space-between;align-items:baseline}
 .daycard .dch b{font-size:13.5px}
 .daycard .dch span{font-size:12px;color:var(--muted)}
@@ -872,11 +881,31 @@ nav.tabs{display:none}
   .money{grid-template-columns:1fr;gap:20px}
   .mside{position:static}
   .views{display:none}
-  .chat{position:static;height:calc(100dvh - 190px);min-height:440px}
+  .chat{position:static;height:calc(100dvh - 176px - env(safe-area-inset-bottom,0px));min-height:0;background:transparent;border-radius:0}
+  .chat .sh{padding:4px 0 10px}
+  .msgs{padding:2px 0 10px;gap:12px}
+  form.send{padding:8px 0 2px}
+  .note{display:none}
+  .daycard{background:none;border:0;padding:0;margin:0 0 2px;gap:0}
+  .daycard .dch,.daycard .dcrow{display:none}
+  .dstrip{display:flex;gap:6px;overflow-x:auto;padding:2px 0 4px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .dstrip::-webkit-scrollbar{display:none}
+  .dstrip span{white-space:nowrap;font-size:12.5px;color:var(--ink2);background:var(--field);border:1px solid var(--line);border-radius:99px;padding:5px 11px;flex:none}
+  .dstrip span b{color:var(--ink);font-weight:600}
+  .dstrip span.hot b{color:var(--late)}
+  .msgs .suggest{display:flex;gap:6px;overflow-x:auto;padding:2px 0 4px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .msgs .suggest::-webkit-scrollbar{display:none}
+  .msgs .suggest .lbl{display:none}
+  .msgs .suggest button{margin:0;flex:none;white-space:nowrap;border:1px solid var(--line2);background:var(--field);border-radius:99px;padding:7px 12px;font-size:13px;color:var(--ink)}
+  .msgs .suggest button::before{content:none}
+  .cvcard{margin-left:34px}
+  .cvcard .ico{width:28px;height:28px}
+  .deck,.plancard{margin-left:34px}
   nav.tabs{display:flex;position:fixed;left:0;right:0;bottom:0;background:var(--bg);border-top:1px solid var(--line2);padding:6px 16px calc(6px + env(safe-area-inset-bottom,0px));gap:4px;z-index:5}
   nav.tabs button{flex:1;background:none;border:0;padding:9px 0;font-size:13.5px;color:var(--muted);border-radius:6px}
   nav.tabs button[aria-selected="true"]{color:var(--accent);background:var(--accent-soft);font-weight:600}
   .wrap{padding-bottom:80px}
+  body{margin-bottom:0}
 }
 @media (max-width:560px){
   .brand .lbl.school{display:none}
@@ -1022,10 +1051,12 @@ nav.tabs{display:none}
         <div class="msgs" id="msgs" aria-live="polite"></div>
         <div class="suggest" id="suggest"></div>
         <form class="send" id="sendForm">
-          <button type="button" class="iconbtn" id="photoBtn" title="Flashcards from a photo of your notes" aria-label="Flashcards from a photo of your notes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span class="pl">+</span></button><input type="file" id="photoIn" accept="image/*" hidden>
-          <label class="sr" for="box">Message</label>
-          <textarea id="box" placeholder="Ask about your week, a class, or campus" maxlength="1200"></textarea>
-          <button class="btn solid" type="submit" id="sendBtn">Send</button>
+          <div class="composer">
+            <button type="button" class="iconbtn" id="photoBtn" title="Flashcards from a photo of your notes" aria-label="Flashcards from a photo of your notes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span class="pl">+</span></button><input type="file" id="photoIn" accept="image/*" hidden>
+            <label class="sr" for="box">Message</label>
+            <textarea id="box" placeholder="Ask about your week or a class" maxlength="1200" rows="1"></textarea>
+            <button class="sendbtn" type="submit" id="sendBtn" aria-label="Send" data-state="send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+          </div>
         </form>
       </section>
     </div>
@@ -1131,6 +1162,10 @@ nav.tabs{display:none}
 (() => {
 const $ = s => document.querySelector(s);
 const suggestEl = document.getElementById('suggest');
+const SEND_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
+const STOP_ICON = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
+function setSendState(st){ const b = document.getElementById('sendBtn'); if (!b) return; b.dataset.state = st; b.innerHTML = st==='stop' ? STOP_ICON : SEND_ICON; b.setAttribute('aria-label', st==='stop' ? 'Stop' : 'Send'); }
+(function(){ const box = document.getElementById('box'); if (!box) return; const grow = () => { box.style.height = '36px'; box.style.height = Math.min(132, box.scrollHeight) + 'px'; }; box.addEventListener('input', grow); box.addEventListener('keydown', e => { if (e.key==='Enter' && !e.shiftKey) setTimeout(grow, 0); }); })();
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const KEY = 'clutch.planner.v1';
 const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
@@ -1218,7 +1253,8 @@ function renderDayCard(){
     <div class="dcrow"><span>Due today</span><b>${tod.length ? tod.map(a=>esc(a.course)).join(', ') : 'Nothing'}${late.length?` <span class="late">· ${late.length} late</span>`:''}</b></div>
     <div class="dcrow"><span>Next block</span><b>${nb ? `${dayLabel(bDate(nb))} ${fmtTime(nb.start)}, ${esc(nb.label)}` : 'None scheduled'}</b></div>
     <div class="dcrow"><span>Focused</span><b>${r.min} min today</b></div>
-    <div class="dcrow"><span>Money 101</span><b>${m} of 5 lessons${S.money && S.money.final ? ` · final ${S.money.final.score}/10`:''}</b></div>`;
+    <div class="dcrow"><span>Money 101</span><b>${m} of 5 lessons${S.money && S.money.final ? ` · final ${S.money.final.score}/10`:''}</b></div>
+    <div class="dstrip"><span>${DAYS[ti]} ${fmtShort(ymd(d))}</span><span class="${tod.length||late.length?'hot':''}">${late.length?`<b>${late.length} late</b>`:tod.length?`<b>Due today:</b> ${tod.map(a=>esc(a.course)).join(', ')}`:'<b>Nothing due today</b>'}</span><span>${nb?`<b>Next:</b> ${dayLabel(bDate(nb))} ${fmtTime(nb.start)}`:'<b>No block</b> planned'}</span><span><b>${r.min} min</b> focused</span><span><b>${m}/5</b> Money 101</span></div>`;
 }
 
 /* ---------- feedback helpers ---------- */
@@ -1566,7 +1602,7 @@ function setView(v, fromTab){
   if (v==='money') renderMoney();
   if (v==='groups') renderGroups();
   if (!suggestEl.hidden) renderSuggest();
-  $('#box').placeholder = v==='money' ? 'Ask about money or a quiz question' : 'Ask about your week, a class, or campus';
+  $('#box').placeholder = v==='money' ? 'Ask about money or a quiz' : 'Ask about your week or a class';
 }
 $('#views').onclick = e => { const b = e.target.closest('[data-v]'); if(b) setView(b.dataset.v); };
 document.querySelector('nav.tabs').onclick = e => { const b = e.target.closest('[data-tab]'); if(b) switchTab(b.dataset.tab); };
@@ -2463,7 +2499,7 @@ async function send(opts2){
   bodyOf(bubble).innerHTML = DOTS;
   let streamed = false;
   const slow = setTimeout(()=>{ if(!streamed) bodyOf(bubble).textContent = 'Still waiting on Claude. If a permission prompt popped up asking to let this page use Claude, hit Allow.'; }, 12000);
-  busy = true; $('#sendBtn').textContent = 'Stop';
+  busy = true; setSendState('stop');
   turnChanges = {assignments:[],blocks:[],completed:[]};
   ctl = new AbortController();
   try {
@@ -2484,7 +2520,7 @@ async function send(opts2){
       else { bubble.className = 'msg bot err'; bodyOf(bubble).textContent = ERR[code] || 'Couldn\'t reach Clutch just now. Try again.'; turns.pop(); }
       if (DEAD.includes(code)) setOffline(ERR[code] || 'AI chat is unavailable here.');
     }
-  } finally { clearTimeout(slow); busy = false; $('#sendBtn').textContent = 'Send'; ctl = null; planCard(); }
+  } finally { clearTimeout(slow); busy = false; setSendState('send'); $('#box').style.height = '36px'; ctl = null; planCard(); }
 }
 $('#sendForm').onsubmit = e => { e.preventDefault(); if (busy) { ctl?.abort(); return; } send(); };
 
@@ -2813,7 +2849,7 @@ async function makeCards(file){
   if (!sample){ finish(DEMO_DECK, `AI is offline in this view, so here's an example deck to show how it works. On claude.ai I read your actual photo, handwriting included.`); return; }
   if (imagesOK === null){ try { const lim = await sample.limits(); imagesOK = !!(lim && lim.images); } catch(e){ imagesOK = false; } }
   if (!imagesOK){ bubble.className = 'msg bot err'; bodyOf(bubble).textContent = 'This view can\'t send photos to Claude. Try opening Clutch on claude.ai in a regular browser tab.'; return; }
-  busy = true; ctl = new AbortController(); $('#sendBtn').textContent = 'Stop'; ptBtn.disabled = true;
+  busy = true; ctl = new AbortController(); setSendState('stop'); ptBtn.disabled = true;
   try {
     const d = await sample.json(`This is a photo of a college student's class notes, slides, or an assignment. Make 6 to 10 flashcards from what is actually written in it. Questions should test understanding (why, how, compare), not just copy a line. Answers are one or two sentences. Guess the course from context if you can (like "PSY 101"), otherwise null. If the image is not notes or is unreadable, reply {"error":"one short sentence saying why"}. Reply with only JSON in this shape: {"topic":"short title","course":"PSY 101 or null","cards":[{"q":"question","a":"answer"}]}`, {images:[file], signal:ctl.signal});
     if (!d || d.error || !Array.isArray(d.cards) || !d.cards.length) throw {code:'bad', message:(d&&d.error)||'no cards'};
@@ -2822,7 +2858,7 @@ async function makeCards(file){
   } catch(e){
     bubble.className = 'msg bot err';
     bodyOf(bubble).textContent = e.code==='cancelled' ? 'Stopped.' : e.code==='bad' ? `I couldn't make cards from that. ${e.message}` : e.code==='not_granted' ? 'You didn\'t allow Clutch to use Claude here.' : e.code==='rate_limited' ? 'Claude is busy for your account right now. Try again in a bit.' : e.code==='image_rejected' ? 'That photo was rejected. Try a JPG or PNG under 20 MB.' : 'Something went wrong reading the photo. Try a clearer shot.';
-  } finally { busy = false; ctl = null; $('#sendBtn').textContent = 'Send'; ptBtn.disabled = false; }
+  } finally { busy = false; ctl = null; setSendState('send'); ptBtn.disabled = false; }
 }
 $('#box').addEventListener('keydown', e => { if (e.key==='Enter' && !e.shiftKey){ e.preventDefault(); if(!busy) send(); } });
 
