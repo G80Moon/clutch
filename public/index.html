@@ -276,6 +276,7 @@ form.send{display:block;padding:8px 12px 12px}
 .fdcard{max-width:600px}
 .ptcard{max-width:640px}
 .cxcard{max-width:600px}
+.cxcard .fdh{flex:1}
 .cxsteps{margin:0;padding-left:20px;display:grid;gap:4px;color:var(--ink2)}
 .cxsteps b{color:var(--ink)} .cxsteps a{color:var(--accent)}
 .cxerr{color:var(--late);font-size:13.5px;margin:0}
@@ -3244,7 +3245,7 @@ function cxWhen(it){ const d = parse(it.due); return `${LONGDAYS[d.getDay()].sli
 function cxReview(items, changed){
   CX.items = items;
   const na = items.filter(i=>i.kind==='a').length;
-  $('#cxTitle').textContent = items.length ? `Found ${items.length} coming up` : 'Nothing new';
+  $('#cxTitle').textContent = items.length ? `Found ${items.length} coming up` : 'You\'re up to date';
   $('#cxSub').textContent = changed ? `${changed} due date${changed>1?'s':''} changed in Canvas, updated` : 'From your Canvas calendar';
   $('#cxBody').innerHTML = !items.length ? `<p class="cxnote">Everything coming up in Canvas is already in your planner.</p>` : `
     <p class="cxnote">${na ? 'Assignments are checked. ' : ''}${na < items.length ? 'Calendar events like “Start Unit 5” aren\'t. ' : ''}<b>Uncheck anything you already turned in.</b> Canvas doesn't share what's submitted.</p>
