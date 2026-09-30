@@ -279,6 +279,13 @@ form.send{display:block;padding:8px 12px 12px}
 .cxsteps{margin:0;padding-left:20px;display:grid;gap:4px;color:var(--ink2)}
 .cxsteps b{color:var(--ink)} .cxsteps a{color:var(--accent)}
 .cxerr{color:var(--late);font-size:13.5px;margin:0}
+.cxcard .field>label{font-size:13.5px;font-weight:600;color:var(--ink)}
+.cxopen{justify-self:start;gap:8px;min-height:40px;border-color:var(--accent);color:var(--accent)}
+.cxopen:hover{background:var(--accent-soft)}
+.cxpaste{display:flex;gap:8px} .cxpaste input{flex:1;min-width:0} .cxpaste .btn{flex:none}
+.cxcta{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;justify-content:space-between;background:var(--accent-soft);border-radius:12px;padding:12px 14px;margin:0 0 12px;font-size:13.5px;color:var(--ink2)}
+.cxcta b{color:var(--ink)} .cxcta div{flex:1 1 220px}
+.group>.lbl .fold{margin-left:auto;padding:0 4px;font-size:12.5px}
 .cxalt,.cxnote{font-size:13.5px;color:var(--ink2);margin:0}
 .cxrep{display:flex;gap:8px;align-items:center;font-size:13.5px;color:var(--ink2)}
 .cxrep input,.cxrow input{flex:none;padding:0;border:0;box-shadow:none}
@@ -1038,7 +1045,7 @@ nav.tabs{display:none}
     <div class="col c-due">
       <section class="block" aria-label="Assignments">
         <div class="sh"><h2>Due</h2><div class="aside"><span class="sub" id="openCount"></span><button class="textbtn" type="button" id="canvasBtn">Connect Canvas</button><button class="textbtn" type="button" id="toggleAdd">Add assignment</button><button type="button" class="bell" id="bellBtn" title="Turn on due-soon alerts" aria-label="Turn on due-soon alerts" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg></button></div></div>
-        <div class="load" id="meter"></div>
+        <div id="cxCta"></div><div class="load" id="meter"></div>
         <div class="soon" id="soon" hidden></div>
         <form class="add" id="addForm" hidden>
           <label class="sr" for="fCourse">Course</label>
@@ -1484,6 +1491,8 @@ function renderFilters(){
   $('#filters').innerHTML = courses.map(c=>`<button type="button" aria-pressed="${c===filter}" data-c="${esc(c)}">${esc(c)}</button>`).join('');
 }
 $('#filters').onclick = e => { const b = e.target.closest('[data-c]'); if(!b) return; filter = b.dataset.c; renderList(); renderFilters(); };
+const listOpen = new Set();
+function cxCta(){ return cxLink() || (!S.example && S.assignments.length) ? '' : `<div class="cxcta"><div>${S.example ? '<b>This is example data.</b> ' : ''}Connect Canvas to bring in your real assignments and due times.</div><button type="button" class="btn solid" data-cxcta>Connect Canvas</button></div>`; }
 function renderList(){
   const items = S.assignments.filter(a => filter==='All' || a.course===filter).sort((a,b)=>a.due.localeCompare(b.due));
   const open = S.assignments.filter(a=>!a.done).length;
@@ -1499,18 +1508,21 @@ function renderList(){
   let html = '';
   for (const [label,cls,fn] of groups){
     const g = items.filter(fn); if(!g.length) continue;
-    html += `<div class="group ${cls}"><div class="lbl">${label} <span class="num">${g.length}</span></div>` + g.map(a=>`
+    const fold = (label==='Later' || label==='Done') && g.length > 3, shut = fold && !listOpen.has(label);
+    html += `<div class="group ${cls}"><div class="lbl">${label} <span class="num">${g.length}</span>${fold ? `<button type="button" class="textbtn fold" data-fold="${label}">${shut ? 'Show' : 'Hide'}</button>` : ''}</div>` + (shut ? '' : g.map(a=>`
       <div class="item${a.done?' done':''}${stCls(a)}${landing(a)}" data-id="${a.id}" title="${stTip(a)}">
         <button type="button" class="check" data-act="toggle" aria-label="${a.done?'Mark not done':'Mark done'}: ${esc(a.title)}">${check}</button>
         <div><div class="t">${esc(a.title)}</div><div class="meta"><span class="course ${tagFor(a.course)}">${esc(a.course)}</span><span>${TYPE[a.type]||'Task'} · ${a.hours}h</span>${a.by==='clutch'?'<span class="byc">Clutch</span>':''}${a.src==='canvas'?'<span class="src-tag">Canvas</span>':''}</div></div>
         <div class="right">${dueChip(a)}
           <div class="acts">${a.done?'':`<button type="button" data-act="focus">Focus</button>`}<button type="button" data-act="del">Delete</button></div>
         </div>
-      </div>`).join('') + '</div>';
+      </div>`).join('')) + '</div>';
   }
-  $('#list').innerHTML = html || `<div class="empty">No assignments yet. Add one, or tell Clutch something like “ENG paper due Friday, maybe 4 hours.”</div>`;
+  const cta = cxCta(); $('#cxCta').innerHTML = cta; $('#canvasBtn').hidden = !!cta;
+  $('#list').innerHTML = (html || `<div class="empty">No assignments yet. Add one, or tell Clutch something like “ENG paper due Friday, maybe 4 hours.”</div>`);
 }
 $('#list').onclick = e => {
+  const f = e.target.closest('[data-fold]'); if (f){ listOpen.has(f.dataset.fold) ? listOpen.delete(f.dataset.fold) : listOpen.add(f.dataset.fold); return renderList(); }
   const b = e.target.closest('[data-act]'); if(!b) return;
   const id = b.closest('.item').dataset.id, a = S.assignments.find(x=>x.id===id); if(!a) return;
   if (b.dataset.act==='toggle'){ if (!a.done) return completeAssignment(id, b); a.done = false; }
@@ -2276,7 +2288,7 @@ const OB_STEPS = 5;
 function obDefaults(){
   const p = S.profile || {};
   const hasData = S.assignments.length > 0 && !S.example;
-  return {name:p.name||'', goal:p.goal||'', courses:(p.courses||[]).slice(), time:p.time||'', work:p.work ?? '', target:p.target || 0, start: hasData ? 'keep' : (S.profile && !S.example ? 'empty' : 'example')};
+  return {name:p.name||'', goal:p.goal||'', courses:(p.courses||[]).slice(), time:p.time||'', work:p.work ?? '', target:p.target || 0, start: hasData ? 'keep' : cxLink() ? 'empty' : 'canvas'};
 }
 function studyMath(){
   const n = ob.courses.length || 4, rawCredits = n*3, credits = Math.min(18, rawCredits), capped = rawCredits > 18, low = credits*2, work = (WORK.find(w=>w[0]===String(ob.work))||[0,0,0])[2];
@@ -2312,7 +2324,7 @@ function obRender(){
   }
   if (obStep===2){
     html = `<div class="obk">Your classes</div><h2>${nm?`Nice to meet you, ${nm}. `:''}What are you taking?</h2>
-      <p class="obsub">Clutch color-codes each class and uses them when you add work. You can change these anytime.</p>
+      <p class="obsub">Clutch color-codes each class and uses them when you add work. If you connect Canvas at the end, it fills these in for you.</p>
       <div class="field"><div class="chipsin" id="obChips">${ob.courses.map((c,i)=>`<span class="course ${tagFor(c)}">${esc(c)}<button type="button" data-rm="${i}" aria-label="Remove ${esc(c)}">×</button></span>`).join('')}</div>
         <label class="sr" for="obCourse">Add a class</label>
         <input id="obCourse" placeholder="Type a class like BIO 111, then press Enter" maxlength="12">
@@ -2347,7 +2359,7 @@ function obRender(){
     else if (ob.goal==='habits') plan.push(`Track your focus minutes so you can see the habit build week to week.`);
     else plan.push(`Warn you when a week has more work than study time blocked.`);
     const hasData = S.assignments.length > 0 && !S.example;
-    const opts = [['example','Example week','See it full of sample work'], ...(hasData?[['keep','My current list','Keep what I have']]:[]), ['empty','Start empty','Add my own work']];
+    const opts = [...(cxLink()?[]:[['canvas','My Canvas','Bring in my real assignments']]), ['example','Example week','See it full of sample work'], ...(hasData?[['keep','My current list','Keep what I have']]:[]), ['empty','Start empty','Add my own work']];
     if (!opts.some(o=>o[0]===ob.start)) ob.start = opts[0][0];
     html = `<div class="obk">You're set</div><h2>Here's how Clutch will help${nm?`, ${nm}`:''}.</h2>
       <ul class="plan">${plan.map(p=>`<li><span>${p}</span></li>`).join('')}</ul>
@@ -2355,7 +2367,7 @@ function obRender(){
         <div><span>Math, science, business tutoring</span><span>G221</span></div>
         <div><span>Reading and writing tutoring</span><span>L200</span></div>
         <div><span>Counseling and career advising</span><span>S202</span></div></div>
-      <div class="field"><span>Start with</span><div class="choices${opts.length>2?' four':''}" id="obStart" style="${opts.length>2?'grid-template-columns:repeat(3,1fr)':''}">${opts.map(([v,l,d])=>`<button type="button" class="choice" data-v="${v}" aria-pressed="${ob.start===v}"><b>${l}</b><span>${d}</span></button>`).join('')}</div></div>`;
+      <div class="field"><span>Start with</span><div class="choices" id="obStart">${opts.map(([v,l,d])=>`<button type="button" class="choice" data-v="${v}" aria-pressed="${ob.start===v}"><b>${l}</b><span>${d}</span></button>`).join('')}</div></div>`;
     next = "Let's go"; hint = g ? `Goal: ${g[1].toLowerCase()}` : '';
   }
   const body = $('#obBody');
@@ -2386,11 +2398,12 @@ function finishOb(){
   const profile = {name: ob.name, goal: ob.goal, courses: ob.courses.slice(), time: ob.time, work: ob.work, target: ob.target || studyMath().low};
   const money = S.money, log = S.log || [], keepDecks = S.decks || [], keepTests = S.tests || [], keepGroups = S.groups || [], keepAch = S.ach || {};
   if (ob.start==='example'){ S = seed(); S.log = log.length ? log : S.log; }
-  else if (ob.start==='empty'){ S = {example:false, assignments:[], blocks:[], log}; }
+  else if (ob.start==='empty' || ob.start==='canvas'){ S = {example:false, assignments:[], blocks:[], log}; }
   S.decks = keepDecks; S.tests = keepTests; S.groups = keepGroups; if (keepGroups.length) S.groupsInit = true; S.ach = keepAch;
   S.profile = profile; S.money = money; ensureMoney(); checkAch(true);
   if (ob.time && TIME_START[ob.time]) $('#bStart').value = TIME_START[ob.time];
   save(); $('#ob').hidden = true; renderAll(); resetChat();
+  if (ob.start==='canvas') return cxConnect();
   if (ob.goal==='money') setView('money');
   toast(profile.name ? `Welcome, ${profile.name}. Let's get this semester.` : `You're all set.`);
 }
@@ -3170,28 +3183,48 @@ async function cxFetch(url){
 }
 function cxShow(){ $('#cx').hidden = false; document.body.style.overflow = 'hidden'; }
 function cxClose(){ $('#cx').hidden = true; document.body.style.overflow = ''; }
-function cxConnect(err){
+function cxConnect(err, val){
   $('#cxTitle').textContent = 'Connect Canvas';
   $('#cxSub').textContent = 'Every assignment from every class, with real due times';
   $('#cxBody').innerHTML = `
-    <ol class="cxsteps"><li>Open <a href="https://canvas.morainevalley.edu/calendar" target="_blank" rel="noopener">Canvas Calendar</a> in a web browser. The Canvas app doesn't show this link.</li><li>At the bottom right, click <b>Calendar Feed</b>.</li><li>Copy the link and paste it here.</li></ol>
-    <label class="field"><span>Calendar Feed link</span><input id="cxUrl" type="url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://canvas.morainevalley.edu/feeds/calendars/user_….ics" value="${esc(cxLink()||'')}"></label>
+    <ol class="cxsteps"><li>Open your Canvas calendar with the button below. Log in if it asks.</li><li>At the bottom right, click <b>Calendar Feed</b> and copy the link.</li><li>Come back and paste it here. Clutch takes it from there.</li></ol>
+    <button type="button" class="btn cxopen" data-cxopen><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>Open Canvas Calendar</button>
+    <div class="field"><label for="cxUrl">Calendar Feed link</label><div class="cxpaste"><input id="cxUrl" type="url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="https://canvas.morainevalley.edu/feeds/calendars/user_….ics" value="${esc(val ?? cxLink() ?? '')}">${navigator.clipboard && navigator.clipboard.readText ? '<button type="button" class="btn" data-cxpaste>Paste</button>' : ''}</div></div>
     ${err ? `<p class="cxerr">${esc(err)}</p>` : ''}
-    <p class="fine">That link is private to your account, so don't share it. Clutch keeps it on this device. Canvas only lets a server read it, so it passes through ours on the way, and nothing is stored.</p>
+    <p class="fine">On a phone, use Safari or Chrome. The Canvas app doesn't show this link. That link is private to your account, so don't share it. Clutch keeps it on this device. Canvas only lets a server read it, so it passes through ours on the way, and nothing is stored.</p>
     <p class="cxalt">Link not working? <button type="button" class="linkbtn" data-cxshot>Use a screenshot of your Canvas To Do list</button></p>`;
   $('#cxFoot').innerHTML = `${cxLink() ? '<button type="button" class="linkbtn" data-cxoff>Disconnect</button>' : ''}<span class="grow"></span><button type="button" class="btn solid" data-cxgo>Get my assignments</button>`;
-  cxShow(); setTimeout(()=>{ const i = $('#cxUrl'); if (i && !i.value) i.focus(); }, 50);
+  cxShow(); if (matchMedia('(hover:hover)').matches) setTimeout(()=>{ const i = $('#cxUrl'); if (i && !i.value) i.focus(); }, 50);
 }
+const CX_FEED = /^https:\/\/\S+\/feeds\/calendars\/\S+\.ics$/;
 async function cxGo(){
+  if (CX.busy) return;
   const url = ($('#cxUrl').value||'').trim(), btn = $('#cxFoot [data-cxgo]');
-  if (!/\/feeds\/calendars\/.+\.ics/.test(url)) return cxConnect('That isn\'t the Calendar Feed link. It ends in .ics and has /feeds/calendars/ in it.');
-  btn.disabled = true; btn.textContent = 'Reading Canvas…';
+  if (!CX_FEED.test(url)) return cxConnect('That isn\'t the Calendar Feed link. It ends in .ics and has /feeds/calendars/ in it.', url);
+  CX.busy = true; if (btn){ btn.disabled = true; btn.textContent = 'Reading Canvas…'; }
   try {
     const {items, updates} = cxParse(await cxFetch(url));
     S.canvas = {url, seen:(S.canvas && S.canvas.seen) || [], last:Date.now()};
     const changed = cxApplyUpdates(updates); save(); renderAll();
+    try { if (CX.win && !CX.win.closed) CX.win.close(); } catch(e){}
     cxReview(items, changed);
-  } catch(e){ cxConnect(e.message); }
+  } catch(e){ cxConnect(e.message, url); }
+  finally { CX.busy = false; }
+}
+// Canvas won't load inside another site, so it opens in its own window: beside Clutch on a laptop, a new tab on a phone
+function cxOpenCanvas(){
+  const url = 'https://canvas.morainevalley.edu/calendar';
+  let w = null;
+  if (innerWidth > 1160 && matchMedia('(hover:hover)').matches){
+    const ww = Math.min(1100, Math.round(screen.availWidth*.55)), hh = Math.min(900, screen.availHeight-60), left = (screen.availLeft||0) + screen.availWidth - ww;
+    w = window.open(url, 'clutchCanvas', `popup,width=${ww},height=${hh},left=${left},top=30`);
+  } else w = window.open(url, '_blank');
+  if (!w) return toast('Your browser blocked the window. Open canvas.morainevalley.edu/calendar yourself.');
+  CX.win = w;
+}
+async function cxPaste(){
+  try { const t = (await navigator.clipboard.readText()).trim(); if (!t) throw 0; $('#cxUrl').value = t; if (CX_FEED.test(t)) cxGo(); else cxConnect('What you copied isn\'t the Calendar Feed link. It ends in .ics.'); }
+  catch(e){ $('#cxUrl').focus(); toast('Paste it into the box (cmd+V, or press and hold).'); }
 }
 async function cxSync(){
   const btn = $('#canvasBtn'); btn.disabled = true; btn.textContent = 'Syncing…';
@@ -3224,8 +3257,10 @@ function cxAdd(){
   picked.forEach(it => S.assignments.push({id:uid(), course:it.course, title:it.title, due:it.due, time:it.time, type:it.type, hours:it.hours, done:false, src:'canvas', cid:it.cid, url:it.url, at:now}));
   // remember everything we showed, so unchecked ones don't come back on every sync
   if (S.canvas) S.canvas.seen = [...new Set([...(S.canvas.seen||[]), ...CX.items.map(i=>i.cid)])].slice(-3000);
-  save(); cxClose(); setView('plan'); switchTab('due'); renderAll();
-  toast(picked.length ? `Added ${picked.length} from Canvas.` : 'Nothing added.');
+  if (S.profile){ const cs = new Set(S.profile.courses||[]); picked.forEach(it=>{ if (/^[A-Z]{2,4} \d{3}/.test(it.course) && cs.size < 8) cs.add(it.course); }); S.profile.courses = [...cs]; }
+  save(); cxClose(); setView('plan'); switchTab('due'); renderAll(); if (picked.length) resetChat();
+  const plan = sample && picked.length ? {label:'Plan my week', run:()=>{ setView('plan'); switchTab('ask'); send({text:'Plan study blocks for the rest of my week around my Canvas deadlines.', display:'Plan my week around Canvas'}); }} : null;
+  toast(picked.length ? `Added ${picked.length} from Canvas.` : 'Nothing added.', plan);
 }
 async function cxShot(file){
   const now = Date.now();
@@ -3250,15 +3285,35 @@ async function cxShot(file){
   } catch(e){ cxConnect(e.code==='empty_completion' || e.code==='invalid_json' ? 'The AI couldn\'t finish reading that one. Try again, or crop it to just the list.' : e.code==='rate_limited' ? 'The AI is busy right now. Try again in a minute.' : e.message || 'That didn\'t work. Try again.'); }
 }
 $('#canvasBtn').onclick = () => cxLink() ? cxSync() : cxConnect();
+$('#cxCta').addEventListener('click', e => { if (e.target.closest('[data-cxcta]')) cxConnect(); });
+// quietly re-sync when Clutch opens (or comes back to the screen) and the last sync is over 6 hours old
+async function cxAuto(){
+  if (CX.auto || !cxLink() || Date.now() - (S.canvas.last||0) < 6*36e5) return;
+  CX.auto = true;
+  try {
+    const {items, updates} = cxParse(await cxFetch(cxLink()));
+    const changed = cxApplyUpdates(updates); S.canvas.last = Date.now(); save(); renderAll();
+    if (items.length) toast(`${items.length} new from Canvas.`, {label:'Review', run:()=>cxReview(items, changed)});
+    else if (changed) toast(`${changed} due date${changed>1?'s':''} changed in Canvas, updated.`);
+  } catch(e){} finally { CX.auto = false; }
+}
+setTimeout(cxAuto, 1500);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState==='visible') cxAuto(); });
 $('#cx').addEventListener('click', e => {
   if (e.target.closest('[data-cxclose]') || e.target === $('#cx')) return cxClose();
   if (e.target.closest('[data-cxgo]')) return cxGo();
+  if (e.target.closest('[data-cxopen]')) return cxOpenCanvas();
+  if (e.target.closest('[data-cxpaste]')) return cxPaste();
   if (e.target.closest('[data-cxadd]')) return cxAdd();
   if (e.target.closest('[data-cxall]')){ const boxes = [...$('#cxBody').querySelectorAll('.cxrow input')], on = boxes.some(b=>!b.checked); boxes.forEach(b=>b.checked = on); e.target.textContent = on ? 'Select none' : 'Select all'; return cxCount(); }
   if (e.target.closest('[data-cxoff]')){ delete S.canvas; save(); renderCanvasBtn(); cxClose(); return toast('Canvas disconnected. Your assignments stay.'); }
   if (e.target.closest('[data-cxshot]')){ const f = document.createElement('input'); f.type = 'file'; f.accept = 'image/*'; f.onchange = () => f.files[0] && cxShot(f.files[0]); f.click(); }
 });
 $('#cx').addEventListener('change', e => { if (e.target.closest('.cxrow')) cxCount(); });
+// pasting a real feed link starts right away
+$('#cx').addEventListener('input', e => { if (e.target.id==='cxUrl' && CX_FEED.test(e.target.value.trim())) cxGo(); });
+// coming back from the Canvas window: put the cursor in the box
+window.addEventListener('focus', () => { const i = $('#cxUrl'); if (!$('#cx').hidden && i && !i.value) i.focus(); });
 $('#cx').addEventListener('keydown', e => { if (e.key==='Enter' && e.target.id==='cxUrl'){ e.preventDefault(); cxGo(); } if (e.key==='Escape') cxClose(); });
 
 function setStatus(on, text){ const s = $('#aiStatus'); s.classList.toggle('on', on); s.textContent = text; }

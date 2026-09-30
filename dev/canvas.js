@@ -5,16 +5,17 @@ const FEED = 'https://canvas.morainevalley.edu/feeds/calendars/user_abc123XYZ.ic
 const errs=[];p.on('pageerror',e=>errs.push(e.message));
 await p.goto('http://localhost:8787/');await p.waitForTimeout(800);
 await p.click('.lnav [data-land=skip]');await p.waitForTimeout(600);
-console.log('button:', await p.$eval('#canvasBtn',e=>e.textContent));
-await p.click('#canvasBtn'); await p.waitForTimeout(200);
+console.log('button:', await p.$eval('#canvasBtn',e=>e.textContent), '| example card:', !!(await p.$('#cxCta .cxcta')));
+await p.click('#cxCta [data-cxcta]'); await p.waitForTimeout(200);
 await p.fill('#cxUrl','https://example.com/not-a-feed'); await p.click('#cxFoot [data-cxgo]'); await p.waitForTimeout(300);
 console.log('bad link error:', await p.$eval('.cxerr',e=>e.textContent));
-await p.fill('#cxUrl',FEED); await p.click('#cxFoot [data-cxgo]'); await p.waitForTimeout(800);
+await p.fill('#cxUrl',FEED); await p.waitForTimeout(800); // a valid link starts on its own
 console.log('review:', await p.$eval('#cxTitle',e=>e.textContent), '|', await p.$$eval('.cxrow',rs=>rs.map(r=>`${r.querySelector('input').checked?'[x]':'[ ]'} ${r.querySelector('.course').textContent}: ${r.querySelector('.t').textContent.slice(0,40)} @ ${r.querySelector('.when').innerText.replace('\n',' ')}`).join('\n  ')));
 console.log('add btn:', await p.$eval('#cxFoot [data-cxadd]',e=>e.textContent), '| replace example:', !!(await p.$('#cxReplace')));
 await p.click('#cxFoot [data-cxadd]'); await p.waitForTimeout(600);
 const rows = await p.$$eval('#list .item',els=>els.map(e=>`${(e.className.match(/st-\w+/)||['plain'])[0]} ${e.querySelector('.t').textContent.slice(0,30)} | ${e.querySelector('.due').textContent}`));
 console.log('list:\n  '+rows.join('\n  '));
+console.log('example card gone:', !(await p.$('#cxCta .cxcta')), '| plan offer:', await p.$eval('#toastBtn',e=>e.hidden?'none':e.textContent));
 console.log('example flag:', await p.evaluate(()=>JSON.parse(localStorage.getItem('clutch.planner.v1')).example), '| button:', await p.$eval('#canvasBtn',e=>e.textContent));
 // check one off -> green
 await p.click('#list .item.st-soon [data-act=toggle]'); await p.waitForTimeout(900);
@@ -36,8 +37,16 @@ const m = await (await b.newContext({...devices['iPhone 13']})).newPage(); m.on(
 await m.goto('http://localhost:8787/m'); await m.waitForTimeout(800); await m.click('.lhero [data-land=skip]'); await m.waitForTimeout(500);
 const hdr = await m.$eval('.c-due .sh', e=>({w:e.scrollWidth, cw:e.clientWidth}));
 console.log('mobile due header overflow:', hdr.w > hdr.cw, hdr);
-await m.click('#canvasBtn'); await m.fill('#cxUrl',FEED); await m.click('#cxFoot [data-cxgo]'); await m.waitForTimeout(800);
+await m.click('#cxCta [data-cxcta]'); await m.fill('#cxUrl',FEED); await m.waitForTimeout(800);
 await m.screenshot({path:__dirname+'/../.shots/canvas-mobile-review.png'});
 await m.click('#cxFoot [data-cxadd]'); await m.waitForTimeout(600);
 await m.screenshot({path:__dirname+'/../.shots/canvas-mobile-list.png'});
+const o = await (await b.newContext({viewport:{width:1280,height:900}})).newPage(); o.on('pageerror',e=>errs.push(e.message));
+await o.goto('http://localhost:8787/'); await o.waitForTimeout(700); await o.click('.lnav [data-land=start]'); await o.waitForTimeout(300);
+await o.fill('#obName','Sam'); await o.click('#obGoal .choice'); await o.waitForTimeout(200);
+for (let i=0;i<3;i++){ await o.click('#obNext'); await o.waitForTimeout(300); }
+console.log('setup start options:', await o.$$eval('#obStart .choice b',e=>e.map(x=>x.textContent).join(' | '), ), '| picked:', await o.$eval('#obStart [aria-pressed=true] b',e=>e.textContent));
+await o.click('#obNext'); await o.waitForTimeout(400);
+console.log('after setup, connect open:', !(await o.$eval('#cx',e=>e.hidden)), '| list empty of examples:', await o.$$eval('#list .item',e=>e.length));
+await o.screenshot({path:__dirname+'/../.shots/canvas-connect-desktop.png'});
 console.log('errors:',errs);await b.close();})();
