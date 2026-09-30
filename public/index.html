@@ -3247,7 +3247,7 @@ async function cxShot(file){
       items.push({cid, title, course, due, time, ms, url:'', kind:'a', type, hours:cxHours(title, type)});
     }
     cxReview(items.sort((a,b)=>a.ms-b.ms), 0);
-  } catch(e){ cxConnect(e.message); }
+  } catch(e){ cxConnect(e.code==='empty_completion' || e.code==='invalid_json' ? 'The AI couldn\'t finish reading that one. Try again, or crop it to just the list.' : e.code==='rate_limited' ? 'The AI is busy right now. Try again in a minute.' : e.message || 'That didn\'t work. Try again.'); }
 }
 $('#canvasBtn').onclick = () => cxLink() ? cxSync() : cxConnect();
 $('#cx').addEventListener('click', e => {
@@ -3280,7 +3280,7 @@ function makeShim(endpoint){
   async function readStream(res, onDelta, signal){
     const reader = res.body.getReader(), dec = new TextDecoder(); let buf = '', stop = null; const blocks = [];
     const handle = ev => {
-      if (ev.type==='content_block_start'){ const b = ev.content_block; blocks[ev.index] = b.type==='tool_use' ? {type:'tool_use', id:b.id, name:b.name, _json:''} : {type:'text', text:b.text||''}; if (b.type==='text' && b.text) onDelta(b.text); }
+      if (ev.type==='content_block_start'){ const b = ev.content_block; if (b.type!=='tool_use' && b.type!=='text') return; blocks[ev.index] = b.type==='tool_use' ? {type:'tool_use', id:b.id, name:b.name, _json:''} : {type:'text', text:b.text||''}; if (b.type==='text' && b.text) onDelta(b.text); }
       else if (ev.type==='content_block_delta'){ const b = blocks[ev.index]; if (!b) return; if (ev.delta.type==='text_delta'){ b.text += ev.delta.text; onDelta(ev.delta.text); } else if (ev.delta.type==='input_json_delta') b._json += ev.delta.partial_json; }
       else if (ev.type==='content_block_stop'){ const b = blocks[ev.index]; if (b && b.type==='tool_use'){ try { b.input = b._json ? JSON.parse(b._json) : {}; } catch(e){ b.input = {}; } delete b._json; } }
       else if (ev.type==='message_delta'){ stop = ev.delta && ev.delta.stop_reason || stop; }

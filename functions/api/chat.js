@@ -44,6 +44,9 @@ export async function onRequestPost({ request, env }) {
     messages: body.messages,
     stream: true
   };
+  // Sonnet 5 thinks on its own when a task looks hard, and on a photo it can spend all of max_tokens thinking and return no text.
+  // Clutch's client doesn't use thinking blocks, so turn it off.
+  if (payload.model === 'claude-sonnet-5') payload.thinking = { type: 'disabled' };
   if (body.system) payload.system = String(body.system).slice(0, 4000);
   if (Array.isArray(body.tools) && body.tools.length) payload.tools = body.tools.slice(0, 8);
 

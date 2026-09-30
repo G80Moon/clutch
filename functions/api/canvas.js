@@ -20,10 +20,11 @@ export async function onRequestPost({ request }) {
   if (!okFeed(url)) return json({ error: 'That isn\'t a Canvas Calendar Feed link. It should end in .ics.' }, 400);
 
   let res;
-  try { res = await fetch(url.toString(), { headers: { accept: 'text/calendar' }, redirect: 'follow' }); }
+  try { res = await fetch(url.toString(), { headers: { accept: 'text/calendar', 'user-agent': 'Mozilla/5.0 (compatible; Clutch/1.0; +https://clutch-mvcc.pages.dev)' }, redirect: 'follow' }); }
   catch { return json({ error: 'Couldn\'t reach Canvas. Try again in a minute.' }, 502); }
   if (!okFeed(new URL(res.url))) return json({ error: 'Canvas sent us somewhere unexpected.' }, 502);
-  if ([400, 401, 403, 404].includes(res.status)) return json({ error: 'Canvas didn\'t recognize that link. Copy it again from Calendar Feed.' }, 404);
+  if ([400, 404].includes(res.status)) return json({ error: 'Canvas didn\'t recognize that link. Copy it again from Calendar Feed.' }, 404);
+  if ([401, 403].includes(res.status)) return json({ error: 'Canvas blocked the request. Try the screenshot option below.' }, 502);
   if (!res.ok) return json({ error: 'Canvas had a problem. Try again in a minute.' }, 502);
 
   const text = await res.text();
