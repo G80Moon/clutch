@@ -1,0 +1,96 @@
+# Clutch — project memory for Claude Code
+
+Read this first. It is the handoff from the Cowork session that built v1 through v47.
+
+## What this is
+
+Clutch is a planner for Moraine Valley Community College students with an AI coach. Built by Moon (no CS background, directs the work and makes the product calls) for a COM 101 group project. The class votes on the best project; presentation is roughly mid October 2026. The bar is "would a student in the room actually use this tonight," not "is the code elegant."
+
+Live: https://clutch-mvcc.pages.dev (Cloudflare Pages, auto-deploys from `main` in about 30 seconds)
+Repo: github.com/G80Moon/clutch
+
+## How Moon works
+
+- Casual, lowercase, direct. Wants honest pushback, not validation. If something is a bad idea, say so and say why.
+- No em dashes anywhere: not in chat, not in UI copy, not in commit messages. Use a comma, a colon or a period.
+- "Not too complex but good." Prefer the simplest change that fully solves the problem. Don't add frameworks, build steps or dependencies.
+- He does not want Claude handling secrets. Never ask him to paste an API key into chat. Tell him the command to run himself (`npx wrangler pages secret put ANTHROPIC_API_KEY --project-name clutch-mvcc`) and move on.
+- Ship both hosts when he asks for a change: commit to `main` (Cloudflare deploys) and, if he still wants the claude.ai artifact copy updated, tell him it needs a separate publish from a Cowork/claude.ai session. The Cloudflare site is the primary host now; the artifact is frozen at v47 unless he says otherwise.
+- When he sends screenshots, look at what he is pointing at, fix the root cause, then say in plain words what was actually wrong. He likes knowing the "why."
+
+## Layout
+
+```
+public/index.html          the entire app: CSS + HTML + JS in one file. This is the source of truth.
+public/og.png              link preview card (1200x630). Referenced with ?v=3, bump when you replace it.
+public/favicon.ico/.png    Clutch's head. favicon.ico must exist as a real file (Pages serves index.html for missing paths, which broke Safari).
+public/apple-touch-icon.png, icon-192.png, icon-512.png, manifest.webmanifest
+public/clutch-focus-extension.zip   Chrome site blocker (side project, rarely touched)
+functions/api/chat.js      Pages Function: proxies to api.anthropic.com/v1/messages, streams SSE back. Key lives only here.
+functions/api/health.js    returns {ok: key configured, caps: KV bound}
+wrangler.toml              pages_build_output_dir = "public"
+dev/                       mock server + Playwright tests (see Workflow)
+```
+
+There is no build step. The head of `public/index.html` (viewport, og tags, icons, manifest) is hand-written; keep it when editing.
+
+## Architecture in one screen
+
+- State: one object `S` in localStorage under key `clutch.planner.v1`: `{assignments, blocks[{id,date,start,min,label,by,at}], log[{date,min,n,...}], money, profile, ach, alerted, decks, tests, groups, groupsInit}`. `save()` writes it. Alerts prefs in `clutch.alerts`, sidebar state in `clutch.rail`.
+- Nothing is uploaded anywhere except chat messages to the AI. This is a stated promise on the landing page and in the pitch. Don't add analytics or server storage without asking.
+- AI: the page looks for `window.claude` (claude.ai artifact runtime). When absent and `/api/health` says ok, `makeShim(endpoint)` builds an equivalent client that talks to `/api/chat`: Messages API body, streaming, up to 6 tool rounds, images downscaled to ~1.4MP JPEG, tolerant JSON parse. Model tiers: quick → claude-haiku-4-5, default → claude-sonnet-5, complex → downgraded to sonnet in the function.
+- Tools the model can call (defined in `tools` in index.html): add_assignment, complete_assignment, add_study_block (refuses past times and overlapping blocks, returns the free slot), start_focus_timer, make_flashcards, make_practice_test. Rules text is built in `rules()` and includes `studySnapshot()` and `groupSnapshot()`.
+- `send({text, display, quiet, bubble})`: `display` is the short text shown in the user bubble while `text` is what the model gets. Use it for any programmatic prompt so the chat doesn't show a wall of text.
+- Views: `#grid[data-view]` = plan | focus | study | money | ask | groups. `setView(v)` on desktop, `switchTab(t)` on phones (tabs: due | focus | money | groups | ask). `TAB_OF_VIEW` maps between them. Columns: `.c-next .c-due .c-week .c-focus .c-study .c-ask .c-money .c-groups`.
+- Desktop (>1160px): left rail `#rail` with icons, collapsible, remembered. Chat `.chat` is sticky and sized by `fitChat()` to fill the viewport. Planner view = hero + due list + chat. Focus = timer + 7-day timeline. Study = flashcards + practice tests.
+- Mobile (≤1160px): bottom tab bar, flat chat, toast at the top (it used to sit over the composer and swallow taps).
+- Flashcards: `decks()`, `saveDeck()`, `studyDeck()` (modal `#fd`), photo → `makeCards(file)`, deduped by `photoHash()` so the same photo returns the same deck. Practice tests: `tests()`, modal `#pt`, `PT` state. Class groups are a deterministic preview (`rng(seed)`, fake classmates), clearly labeled PREVIEW.
+- Trophies: `checkAch(quiet)`; 22 of them; quiet during boot so nothing toasts on the landing page.
+- Example data: "Example data · Reset · Clear list" in the header. Reset gives a full demo state. Onboarding: `#ob`, `finishOb()`.
+
+## Workflow
+
+Before every push:
+
+```
+node dev/mock.js &        # serves public/index.html on :8787 with a fake /api/chat (no key needed)
+node dev/perr.js          # must print "clean"
+node dev/smoke.js         # desktop: chat, plan-my-week tool round, practice test, photo deck
+node dev/mobile.js        # iPhone 13: study a deck, "Have Clutch quiz me", chat box still tappable
+```
+
+Playwright is needed (`npm i -D playwright && npx playwright install chromium`). To test against the real function locally: copy `.dev.vars.example` to `.dev.vars`, Moon puts the key in, then `npx wrangler pages dev public`.
+
+Screenshots are the fastest way to check layout: take one at 1540x880 (Moon's Mac roughly), 1280x800, and iPhone 13, for the view you touched. Moon will send his own screenshots too.
+
+Push to `main` deploys. Verify with `curl -s https://clutch-mvcc.pages.dev/ | grep <something you changed>` after ~30s.
+
+## Gotchas learned the hard way
+
+- Cloudflare Pages returns index.html (200) for any missing path. Anything a browser fetches by convention (favicon.ico, robots.txt) must be a real file.
+- Safari caches favicons in its own store; a changed icon needs a cache-busted href (`?v=N`).
+- iMessage only renders a link card when the message is the bare URL.
+- Elements with `opacity:0` still catch taps. Anything that fades out needs `pointer-events:none` / `visibility:hidden` too.
+- `position:sticky` needs a parent taller than the element. The chat column is `align-self:stretch` for that reason.
+- CSS specificity ordering: the mobile block at the end of the stylesheet wins over the desktop rules above it. Put desktop-only overrides in the `@media (min-width:1161px)` block near the rail CSS, or use a more specific selector.
+- Class names collide easily in a 3,000 line file (`.plan`, `.dh`, `.views` all bit us). Grep before adding a class.
+- The model sometimes returns 7 cards when asked for "about 8"; prompts that need a count say "exactly N."
+- Same-origin check in chat.js uses Origin/Referer; the mock skips it. Don't remove it.
+
+## Roadmap (two weeks to presentation, in priority order)
+
+1. Feedback from the group and 3 to 5 classmates watching them use it on their phones. Fix confusion first.
+2. Syllabus → planner: photo or pasted text of a syllabus / Canvas list → assignments filled in. Same pattern as photo flashcards (image in, JSON out, `add_assignment` tool). This is the demo opener.
+3. First-minute experience: cold link to a set-up planner in under 60 seconds.
+4. Reliability: bind KV namespace `RATE` (per-visitor caps), graceful AI-down states, a "presentation" example profile that Reset restores.
+5. Proof on the landing page: real visitor numbers from Cloudflare analytics and real classmate quotes only. Never fabricated ones.
+6. Presentation: live phone demo mirrored to the screen, six slides max, QR cards, a 60s screen recording as a wifi backup.
+
+Skip for now: real accounts/class groups, push notifications, the Chrome extension, dark mode. None of them change the class vote.
+
+## Things not to change without asking
+
+- The "everything saves on your device" promise.
+- The single-file architecture.
+- Model allowlist, MAX_TOKENS and the same-origin check in `functions/api/chat.js`.
+- Moraine Valley cost numbers in the semester cost planner (they cite sources in the Works cited section).
