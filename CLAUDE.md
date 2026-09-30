@@ -71,6 +71,9 @@ Push to `main` deploys. Verify with `curl -s https://clutch-mvcc.pages.dev/ | gr
 
 ## Gotchas learned the hard way
 
+- Canvas (Instructure) returns 403 to requests with no User-Agent. Server-side fetches to Canvas must send one.
+- Sonnet 5 thinks on its own when a task looks hard (images especially) and can spend all of max_tokens on it, returning no text. chat.js sends `thinking: {type:'disabled'}` for Sonnet 5. If the model is ever upgraded to Sonnet 5.5, `disabled` is a 400 there: use `{type:'between_tools'}` instead.
+
 - Cloudflare Pages returns index.html (200) for any missing path. Anything a browser fetches by convention (favicon.ico, robots.txt) must be a real file.
 - Safari caches favicons in its own store; a changed icon needs a cache-busted href (`?v=N`).
 - iMessage only renders a link card when the message is the bare URL.
@@ -84,7 +87,7 @@ Push to `main` deploys. Verify with `curl -s https://clutch-mvcc.pages.dev/ | gr
 ## Roadmap (two weeks to presentation, in priority order)
 
 1. Feedback from the group and 3 to 5 classmates watching them use it on their phones. Fix confusion first.
-2. Canvas import (built 2026-09-30, needs a real-feed test on the live site and on a phone). This is the demo opener. A syllabus import was considered and dropped: syllabi miss most assignments.
+2. Canvas import (built 2026-09-30, worked on Moon's real feed on desktop: 53 found, 35 assignments. Still untested on a phone). This is the demo opener. A syllabus import was considered and dropped: syllabi miss most assignments.
 3. First-minute experience: cold link to a set-up planner in under 60 seconds.
 4. Reliability: bind KV namespace `RATE` (per-visitor caps), graceful AI-down states, a "presentation" example profile that Reset restores.
 5. Proof on the landing page: real visitor numbers from Cloudflare analytics and real classmate quotes only. Never fabricated ones.
