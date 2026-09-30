@@ -3236,11 +3236,11 @@ async function cxShot(file){
     if (imagesOK === null){ try { const lim = await sample.limits(); imagesOK = !!(lim && lim.images); } catch(e){ imagesOK = false; } }
     if (!imagesOK) throw new Error('This view can\'t send photos to the AI.');
     const t = today();
-    const d = await sample.json(`This is a screenshot of a college student's Canvas To Do list, assignment list or calendar. Today is ${LONGDAYS[t.getDay()]} ${ymd(t)}. List every assignment you can see that is due today or later, with the exact title. For dates without a year, use the year that makes the date upcoming. Course: a short code like "COM 101" if you can see one, otherwise the course name, otherwise null. Time: 24-hour "HH:MM" if shown, otherwise null. If the image is not a list of schoolwork, reply {"error":"one short sentence saying why"}. Reply with only JSON in this shape: {"items":[{"title":"exact title","course":"COM 101 or null","due":"YYYY-MM-DD","time":"HH:MM or null"}]}`, {images:[file]});
+    const d = await sample.json(`This is a screenshot of a college student's Canvas To Do list, assignment list or calendar. Today is ${LONGDAYS[t.getDay()]} ${ymd(t)}. List every assignment you can see that is due today or later, with the exact title (without the time Canvas shows in front of it). For dates without a year, use the year that makes the date upcoming. Course: a short code like "COM 101" if you can see one, otherwise the course name, otherwise null. Time: 24-hour "HH:MM" if shown, otherwise null. If the image is not a list of schoolwork, reply {"error":"one short sentence saying why"}. Reply with only JSON in this shape: {"items":[{"title":"exact title","course":"COM 101 or null","due":"YYYY-MM-DD","time":"HH:MM or null"}]}`, {images:[file]});
     if (!d || d.error || !Array.isArray(d.items)) throw new Error((d && d.error) || 'I couldn\'t find assignments in that picture.');
     const have = cxHave(), items = [];
     for (const x of d.items){
-      const title = String(x.title||'').trim().slice(0,80), due = String(x.due||''), time = /^\d{2}:\d{2}$/.test(x.time||'') ? x.time : '';
+      const title = String(x.title||'').replace(/^\d{1,2}(:\d{2})?\s?[ap]m?\s+/i,'').trim().slice(0,80), due = String(x.due||''), time = /^\d{2}:\d{2}$/.test(x.time||'') ? x.time : '';
       if (!title || !/^\d{4}-\d{2}-\d{2}$/.test(due)) continue;
       const course = cxCourse(String(x.course||'')) || 'Canvas', cid = ('shot:'+course+'|'+title+'|'+due).toLowerCase(), type = cxType(title);
       const ms = +dueAt({due, time}); if (ms < now || have.has(cid)) continue;
