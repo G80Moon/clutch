@@ -8,7 +8,8 @@ const MODELS = {
 };
 const MAX_TOKENS = 2000;
 const PER_VISITOR_PER_DAY = 80;                // requests (a tool call round counts as one)
-const EVERYONE_PER_DAY = 2500;
+// The real budget guard is the spend limit on the Anthropic account. KV's free plan allows 1,000 writes a day,
+// so this cap does one write per request and never blocks chat if KV itself fails.
 
 const json = (obj, status = 200) => new Response(JSON.stringify(obj), { status, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
 
@@ -24,18 +25,18 @@ export async function onRequestPost({ request, env }) {
   try { body = await request.json(); } catch { return json({ error: 'bad json' }, 400); }
   if (!Array.isArray(body.messages) || !body.messages.length) return json({ error: 'messages required' }, 400);
 
-  // daily caps (only when a KV namespace named RATE is bound)
+  // daily cap per visitor (only when a KV namespace named RATE is bound).
+  // A visitor is IP + a random id the page keeps on the device, so a classroom on one wifi doesn't share one allowance.
   if (env.RATE) {
     const day = new Date().toISOString().slice(0, 10);
     const ip = request.headers.get('cf-connecting-ip') || 'unknown';
-    const [mine, all] = await Promise.all([env.RATE.get(`ip:${ip}:${day}`), env.RATE.get(`all:${day}`)]);
-    if (Number(mine || 0) >= PER_VISITOR_PER_DAY) return json({ error: 'You have used today\'s AI allowance on this device. It resets at midnight UTC.' }, 429);
-    if (Number(all || 0) >= EVERYONE_PER_DAY) return json({ error: 'Clutch hit its daily AI budget. Try again tomorrow.' }, 429);
-    // best effort counters (KV is eventually consistent; good enough for a cap)
-    await Promise.all([
-      env.RATE.put(`ip:${ip}:${day}`, String(Number(mine || 0) + 1), { expirationTtl: 172800 }),
-      env.RATE.put(`all:${day}`, String(Number(all || 0) + 1), { expirationTtl: 172800 })
-    ]);
+    const id = (request.headers.get('x-clutch-id') || '').replace(/[^\w-]/g, '').slice(0, 40) || 'none';
+    const key = `v:${ip}:${id}:${day}`;
+    let used = 0;
+    try { used = Number(await env.RATE.get(key)) || 0; } catch {}
+    if (used >= PER_VISITOR_PER_DAY) return json({ error: 'You\'ve used today\'s AI messages on this device. They reset overnight.' }, 429);
+    // best effort (KV is eventually consistent and allows one write per key per second; fine for a cap)
+    try { await env.RATE.put(key, String(used + 1), { expirationTtl: 172800 }); } catch {}
   }
 
   const payload = {

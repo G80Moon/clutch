@@ -7,7 +7,7 @@ const sse = (res, events) => { res.writeHead(200, {'content-type':'text/event-st
 const textEvents = t => { const ev=[{type:'message_start'},{type:'content_block_start',index:0,content_block:{type:'text',text:''}}]; for (const w of t.match(/.{1,12}/g)) ev.push({type:'content_block_delta',index:0,delta:{type:'text_delta',text:w}}); ev.push({type:'content_block_stop',index:0},{type:'message_delta',delta:{stop_reason:'end_turn'}},{type:'message_stop'}); return ev; };
 let calls = [];
 // fake Canvas Calendar Feed, dates relative to now so it never goes stale. GET /canvas-move shifts one due date (tests sync).
-let moved = false;
+let moved = false, failNext = 0;
 const icsT = (days, h, m) => { const d = new Date(); d.setDate(d.getDate()+days); d.setHours(h, m, 0, 0); return d.toISOString().replace(/[-:]/g,'').replace(/\.\d+/,''); };
 const icsD = days => { const d = new Date(); d.setDate(d.getDate()+days); return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`; };
 const feed = () => { const ev = [
@@ -24,6 +24,7 @@ const feed = () => { const ev = [
 http.createServer((req,res)=>{
   if (req.method==='GET' && (req.url==='/' || req.url==='/m')){ res.writeHead(200,{'content-type':'text/html'}); res.end(fs.readFileSync(__dirname+'/../public/index.html')); return; }
   if (req.url==='/api/health'){ res.writeHead(200,{'content-type':'application/json'}); res.end('{"ok":true}'); return; }
+  if (req.url==='/api/chat' && failNext){ const st = failNext; failNext = 0; res.writeHead(st,{'content-type':'application/json'}); res.end(JSON.stringify({error: st===429 ? "You've used today's AI messages on this device. They reset overnight." : st===503 ? 'The API key on this deployment was rejected.' : 'Upstream error.'})); return; }
   if (req.url==='/api/chat'){ let b=''; req.on('data',d=>b+=d); req.on('end',()=>{ const body=JSON.parse(b); calls.push(body);
     const last = body.messages[body.messages.length-1];
     const hasImage = Array.isArray(last.content) && last.content.some(c=>c.type==='image');
@@ -40,6 +41,7 @@ http.createServer((req,res)=>{
     }
     return sse(res, textEvents('Hey! Tonight, do the MATH homework first, it is due at 11:59pm. Then 25 minutes on the speech outline.'));
   }); return; }
+  if (req.url.startsWith('/fail?')){ failNext = Number(new URL(req.url,'http://x').searchParams.get('status')); res.end('ok'); return; }
   if (req.url==='/canvas-move'){ moved = true; res.end('ok'); return; }
   if (req.url==='/api/canvas'){ let b=''; req.on('data',d=>b+=d); req.on('end',()=>{ const {url} = JSON.parse(b);
     if (!/^https:\/\/canvas\.morainevalley\.edu\/feeds\/calendars\/[\w.-]+\.ics$/.test(url)){ res.writeHead(400,{'content-type':'application/json'}); res.end('{"error":"That isn\'t a Canvas Calendar Feed link. It should end in .ics."}'); return; }

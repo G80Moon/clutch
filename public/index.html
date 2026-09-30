@@ -2624,9 +2624,11 @@ const tools = [
     execute(i){ setMode('focus', Math.min(90,Math.max(5,Number(i.minutes)||25))); if(i.assignment_id && S.assignments.some(a=>a.id===String(i.assignment_id))) setTarget('a:'+i.assignment_id); startTimer(); addAction(`Timer started: ${T.total/60} min`); return {ok:true}; }},
 ];
 
+// our server sends a readable sentence with 429s (daily cap, or Claude busy); prefer it
+const errText = e => (e && e.code==='rate_limited' && e.message && !/^HTTP /.test(e.message)) ? e.message : (ERR[e && e.code] || '');
 const ERR = {
   not_granted:'Clutch needs permission to use Claude. Reload and allow it to chat.',
-  sampling_disabled:'AI chat isn\'t available on this account.',
+  sampling_disabled:'Clutch\'s AI is down right now. Your planner, timer and flashcards still work.',
   rate_limited:'Too many messages at once. Give it a minute and try again.',
   session_expired:'Your Claude session expired. Sign in again to keep chatting.',
   refused:'Clutch can\'t help with that one. Try asking a different way.',
@@ -2670,7 +2672,7 @@ async function send(opts2){
     if (code === 'cancelled'){ if (e.text) { bubble.classList.remove('thinking'); bodyOf(bubble).innerHTML = md(e.text); turns.push({role:'assistant',content:e.text}); } else { bubble.remove(); turns.pop(); } }
     else {
       if (e && e.text){ bubble.classList.remove('thinking'); bodyOf(bubble).innerHTML = md(e.text); turns.push({role:'assistant',content:e.text}); addMsg('bot err', 'Got cut off. Ask again to finish.'); }
-      else { bubble.className = 'msg bot err'; bodyOf(bubble).textContent = ERR[code] || 'Couldn\'t reach Clutch just now. Try again.'; turns.pop(); }
+      else { bubble.className = 'msg bot err'; bodyOf(bubble).textContent = errText(e) || 'Couldn\'t reach Clutch just now. Try again.'; turns.pop(); }
       if (DEAD.includes(code)) setOffline(ERR[code] || 'AI chat is unavailable here.');
     }
   } finally { clearTimeout(slow); busy = false; setSendState('send'); $('#box').style.height = '36px'; ctl = null; planCard(); }
@@ -2896,7 +2898,7 @@ async function ptGenerate(){
     ptStart({title:String((d&&d.title)||title).slice(0,70), course:String((d&&d.course)||course).slice(0,12), questions:qs.slice(0,PT.n), src:PT.src});
   } catch(e){
     if (e.code==='cancelled') return;
-    $('#ptBody').innerHTML = `<div class="ptwait"><b>Couldn't write that one.</b><span class="fine">${e.code==='not_granted'?'You didn\'t allow Clutch to use Claude here.':e.code==='rate_limited'?'Claude is busy for your account. Try again in a minute.':'Try a more specific topic, or a deck.'}</span><button type="button" class="btn" id="ptBack">Back</button></div>`;
+    $('#ptBody').innerHTML = `<div class="ptwait"><b>Couldn't write that one.</b><span class="fine">${e.code==='not_granted'?'You didn\'t allow Clutch to use Claude here.':e.code==='rate_limited'?errText(e):e.code==='upstream_error'?'Couldn\'t reach Clutch just now. Try again.':'Try a more specific topic, or a deck.'}</span><button type="button" class="btn" id="ptBack">Back</button></div>`;
     $('#ptBack').onclick = ptPicker;
   } finally { PT.ctl = null; }
 }
@@ -3019,7 +3021,7 @@ async function makeCards(file){
     finish(d, `Here's your deck${d.course?` for ${d.course}`:''}. Tap a card to flip it, and hit "Quiz me" when you want me to run you through them.`);
   } catch(e){
     bubble.className = 'msg bot err';
-    bodyOf(bubble).textContent = e.code==='cancelled' ? 'Stopped.' : e.code==='bad' ? `I couldn't make cards from that. ${e.message}` : e.code==='not_granted' ? 'You didn\'t allow Clutch to use Claude here.' : e.code==='rate_limited' ? 'Claude is busy for your account right now. Try again in a bit.' : e.code==='image_rejected' ? 'That photo was rejected. Try a JPG or PNG under 20 MB.' : 'Something went wrong reading the photo. Try a clearer shot.';
+    bodyOf(bubble).textContent = e.code==='cancelled' ? 'Stopped.' : e.code==='bad' ? `I couldn't make cards from that. ${e.message}` : e.code==='not_granted' ? 'You didn\'t allow Clutch to use Claude here.' : e.code==='rate_limited' ? errText(e) : e.code==='upstream_error' ? 'Couldn\'t reach Clutch just now. Try again.' : e.code==='image_rejected' ? 'That photo was rejected. Try a JPG or PNG under 20 MB.' : 'Something went wrong reading the photo. Try a clearer shot.';
   } finally { busy = false; ctl = null; setSendState('send'); ptBtn.disabled = false; }
 }
 $('#box').addEventListener('keydown', e => { if (e.key==='Enter' && !e.shiftKey){ e.preventDefault(); if(!busy) send(); } });
@@ -3287,7 +3289,7 @@ async function cxShot(file){
       items.push({cid, title, course, due, time, ms, url:'', kind:'a', type, hours:cxHours(title, type)});
     }
     cxReview(items.sort((a,b)=>a.ms-b.ms), 0);
-  } catch(e){ cxConnect(e.code==='empty_completion' || e.code==='invalid_json' ? 'The AI couldn\'t finish reading that one. Try again, or crop it to just the list.' : e.code==='rate_limited' ? 'The AI is busy right now. Try again in a minute.' : e.message || 'That didn\'t work. Try again.'); }
+  } catch(e){ cxConnect(e.code==='empty_completion' || e.code==='invalid_json' ? 'The AI couldn\'t finish reading that one. Try again, or crop it to just the list.' : e.code==='rate_limited' ? errText(e) : e.code==='upstream_error' ? 'Couldn\'t reach Clutch just now. Try again.' : e.message || 'That didn\'t work. Try again.'); }
 }
 $('#canvasBtn').onclick = () => cxLink() ? cxSync() : cxConnect();
 $('#cxCta').addEventListener('click', e => { if (e.target.closest('[data-cxcta]')) cxConnect(); });
@@ -3326,6 +3328,8 @@ function setOffline(msg){ sample = null; setStatus(false, 'offline'); const n = 
 
 
 /* ---------- self-hosted mode: a sample() lookalike that talks to /api/chat (Cloudflare Pages function) ---------- */
+// random id kept on this device so the server's daily AI cap is per phone/laptop, not per wifi network. Not linked to anything else.
+function deviceId(){ let id = ''; try { id = localStorage.getItem('clutch.id') || ''; if (!id){ id = Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem('clutch.id', id); } } catch(e){} return id; }
 function makeShim(endpoint){
   const MODELS = {quick:'claude-haiku-4-5', default:'claude-sonnet-5', complex:'claude-opus-5-5'};
   const fail = (code, message, text) => { const e = {code, message}; if (text) e.text = text; return e; };
@@ -3368,7 +3372,7 @@ function makeShim(endpoint){
     const onDelta = d => { if (sep){ d = '\n\n' + d; sep = false; } text += d; if (opts.onText) try { opts.onText({text, delta:d}); } catch(e){} };
     while (rounds++ < 6){
       let res;
-      try { res = await fetch(endpoint, {method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify(body), signal: opts.signal}); }
+      try { res = await fetch(endpoint, {method:'POST', headers:{'content-type':'application/json', 'x-clutch-id':deviceId()}, body: JSON.stringify(body), signal: opts.signal}); }
       catch(e){ if (e && e.name==='AbortError') throw fail('cancelled', 'stopped', text); throw fail('upstream_error', String(e), text); }
       if (!res.ok){ let msg = ''; try { msg = (await res.json()).error || ''; } catch(e){} throw fail(res.status===429 ? 'rate_limited' : res.status===403 ? 'not_granted' : res.status===503 ? 'sampling_disabled' : 'upstream_error', msg || ('HTTP '+res.status), text); }
       let out;
@@ -3400,11 +3404,16 @@ function makeShim(endpoint){
   shim.limits = async () => ({maxPromptBytes:65536, images:{maxCount:4, maxInputBytes:20*1024*1024, mediaTypes:['image/jpeg','image/png','image/webp','image/gif']}, tools:{maxCount:8}});
   return shim;
 }
+let healthDown = false;
 async function selfHosted(){
   if (window.claude && window.claude.use) return null;
   if (!/^https?:$/.test(location.protocol)) return null;
   try { const el = $('#extLink'); if (el) el.hidden = false; } catch(e){}
-  try { const r = await fetch('/api/health', {cache:'no-store'}); if (!r.ok) return null; const j = await r.json(); return j && j.ok ? makeShim('/api/chat') : null; } catch(e){ return null; }
+  for (let i = 0; i < 2; i++){
+    try { const r = await fetch('/api/health', {cache:'no-store'}); if (r.ok){ const j = await r.json(); return j && j.ok ? makeShim('/api/chat') : null; } } catch(e){}
+    await new Promise(res=>setTimeout(res, 2500)); // flaky wifi: try once more before going offline
+  }
+  healthDown = true; return null;
 }
 
 resetChat();
@@ -3416,7 +3425,7 @@ if (!S.profile) showLand();
       const lim = await sample.limits().catch(()=>null);
       toolsOK = !!(lim && lim.tools);
       setStatus(true, toolsOK ? 'online, can edit your planner' : 'online');
-    } else setOffline(/^https?:$/.test(location.protocol) ? 'AI chat is not set up on this copy of Clutch. The planner, timer, Money 101 and groups work anywhere.' : 'AI chat works when this page is opened on claude.ai. The planner and timer work anywhere.');
+    } else setOffline(healthDown ? 'Couldn\'t reach Clutch\'s AI. Check your connection and reload. Your planner and timer still work.' : /^https?:$/.test(location.protocol) ? 'AI chat is not set up on this copy of Clutch. The planner, timer, Money 101 and groups work anywhere.' : 'AI chat works when this page is opened on claude.ai. The planner and timer work anywhere.');
   } catch(e){ sample = null; setOffline('AI chat is unavailable here.'); }
   if (pending){ const t = pending, bb = pendingBubble; pending = null; pendingBubble = null;
     if (sample) send({text:t, quiet:true, bubble:bb});

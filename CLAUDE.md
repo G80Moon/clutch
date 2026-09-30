@@ -60,6 +60,7 @@ node dev/mock.js &        # serves public/index.html on :8787 with a fake /api/c
 node dev/perr.js          # must print "clean"
 node dev/smoke.js         # desktop: chat, plan-my-week tool round, practice test, photo deck
 node dev/mobile.js        # iPhone 13: study a deck, "Have Clutch quiz me", chat box still tappable
+node dev/errors.js        # what students see when the AI fails: daily cap, Claude down, bad key
 node dev/canvas.js        # Canvas feed: connect, review, add, row colors, sync, moved due date (screenshots in .shots/)
 ```
 
@@ -89,7 +90,7 @@ Push to `main` deploys. Verify with `curl -s https://clutch-mvcc.pages.dev/ | gr
 1. Feedback from the group and 3 to 5 classmates watching them use it on their phones. Fix confusion first.
 2. Canvas import (built 2026-09-30, worked on Moon's real feed on desktop: 53 found, 35 assignments. Still untested on a phone). This is the demo opener. A syllabus import was considered and dropped: syllabi miss most assignments.
 3. First-minute experience: cold link to a set-up planner in under 60 seconds.
-4. Reliability: bind KV namespace `RATE` (per-visitor caps), graceful AI-down states, a "presentation" example profile that Reset restores.
+4. Reliability: KV `RATE` bound 2026-09-30 (80 AI requests per device per day, keyed by IP + `clutch.id` so a classroom on one wifi isn't one visitor; one KV write per request because the free plan allows 1,000 writes/day; fails open). AI error states swept (dev/errors.js). Still open: a "presentation" example profile that Reset restores. The budget guard is a spend limit on the Anthropic account, which Moon sets.
 5. Proof on the landing page: real visitor numbers from Cloudflare analytics and real classmate quotes only. Never fabricated ones.
 6. Presentation: live phone demo mirrored to the screen, six slides max, QR cards, a 60s screen recording as a wifi backup.
 
