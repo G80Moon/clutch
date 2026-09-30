@@ -28,6 +28,7 @@ public/apple-touch-icon.png, icon-192.png, icon-512.png, manifest.webmanifest
 public/clutch-focus-extension.zip   Chrome site blocker (side project, rarely touched)
 functions/api/chat.js      Pages Function: proxies to api.anthropic.com/v1/messages, streams SSE back. Key lives only here.
 functions/api/health.js    returns {ok: key configured, caps: KV bound}
+functions/api/canvas.js    fetches a student's Canvas Calendar Feed (.ics) and passes it back. Only canvas.morainevalley.edu / *.instructure.com /feeds/calendars/*.ics links. Stores nothing.
 wrangler.toml              pages_build_output_dir = "public"
 dev/                       mock server + Playwright tests (see Workflow)
 ```
@@ -37,7 +38,7 @@ There is no build step. The head of `public/index.html` (viewport, og tags, icon
 ## Architecture in one screen
 
 - State: one object `S` in localStorage under key `clutch.planner.v1`: `{assignments, blocks[{id,date,start,min,label,by,at}], log[{date,min,n,...}], money, profile, ach, alerted, decks, tests, groups, groupsInit}`. `save()` writes it. Alerts prefs in `clutch.alerts`, sidebar state in `clutch.rail`.
-- Nothing is uploaded anywhere except chat messages to the AI. This is a stated promise on the landing page and in the pitch. Don't add analytics or server storage without asking.
+- Nothing is stored anywhere but the device. Only what goes to the AI (chats, photos) and the Canvas feed pass through the server, and nothing is kept. This is the stated promise (landing footer, wording Moon approved 2026-09-30). Don't add analytics or server storage without asking.
 - AI: the page looks for `window.claude` (claude.ai artifact runtime). When absent and `/api/health` says ok, `makeShim(endpoint)` builds an equivalent client that talks to `/api/chat`: Messages API body, streaming, up to 6 tool rounds, images downscaled to ~1.4MP JPEG, tolerant JSON parse. Model tiers: quick → claude-haiku-4-5, default → claude-sonnet-5, complex → downgraded to sonnet in the function.
 - Tools the model can call (defined in `tools` in index.html): add_assignment, complete_assignment, add_study_block (refuses past times and overlapping blocks, returns the free slot), start_focus_timer, make_flashcards, make_practice_test. Rules text is built in `rules()` and includes `studySnapshot()` and `groupSnapshot()`.
 - `send({text, display, quiet, bubble})`: `display` is the short text shown in the user bubble while `text` is what the model gets. Use it for any programmatic prompt so the chat doesn't show a wall of text.
@@ -46,6 +47,8 @@ There is no build step. The head of `public/index.html` (viewport, og tags, icon
 - Mobile (≤1160px): bottom tab bar, flat chat, toast at the top (it used to sit over the composer and swallow taps).
 - Flashcards: `decks()`, `saveDeck()`, `studyDeck()` (modal `#fd`), photo → `makeCards(file)`, deduped by `photoHash()` so the same photo returns the same deck. Practice tests: `tests()`, modal `#pt`, `PT` state. Class groups are a deterministic preview (`rng(seed)`, fake classmates), clearly labeled PREVIEW.
 - Trophies: `checkAch(quiet)`; 22 of them; quiet during boot so nothing toasts on the landing page.
+- Canvas: "Connect Canvas" / "Sync Canvas" in the Due header, modal `#cx`, code under `/* Canvas calendar feed */` (`cxParse`, `cxReview`, `cxSync`). The feed link lives in `S.canvas = {url, seen[uids], last}` on the device. Imported assignments carry `src:'canvas', cid (feed UID), url, time ('HH:MM')`. Sync adds only unseen UIDs and follows due date changes. The feed has no "submitted" flag, so done = checked off in Clutch. Fallback: screenshot of the Canvas To Do list read by the AI.
+- Due times: `a.time` is optional; `dueAt()` uses it or 11:59pm. Row colors (`stCls`): green done, yellow due within 48h, red late and not done.
 - Example data: "Example data · Reset · Clear list" in the header. Reset gives a full demo state. Onboarding: `#ob`, `finishOb()`.
 
 ## Workflow
@@ -57,6 +60,7 @@ node dev/mock.js &        # serves public/index.html on :8787 with a fake /api/c
 node dev/perr.js          # must print "clean"
 node dev/smoke.js         # desktop: chat, plan-my-week tool round, practice test, photo deck
 node dev/mobile.js        # iPhone 13: study a deck, "Have Clutch quiz me", chat box still tappable
+node dev/canvas.js        # Canvas feed: connect, review, add, row colors, sync, moved due date (screenshots in .shots/)
 ```
 
 Playwright is needed (`npm i -D playwright && npx playwright install chromium`). To test against the real function locally: copy `.dev.vars.example` to `.dev.vars`, Moon puts the key in, then `npx wrangler pages dev public`.
@@ -80,7 +84,7 @@ Push to `main` deploys. Verify with `curl -s https://clutch-mvcc.pages.dev/ | gr
 ## Roadmap (two weeks to presentation, in priority order)
 
 1. Feedback from the group and 3 to 5 classmates watching them use it on their phones. Fix confusion first.
-2. Syllabus → planner: photo or pasted text of a syllabus / Canvas list → assignments filled in. Same pattern as photo flashcards (image in, JSON out, `add_assignment` tool). This is the demo opener.
+2. Canvas import (built 2026-09-30, needs a real-feed test on the live site and on a phone). This is the demo opener. A syllabus import was considered and dropped: syllabi miss most assignments.
 3. First-minute experience: cold link to a set-up planner in under 60 seconds.
 4. Reliability: bind KV namespace `RATE` (per-visitor caps), graceful AI-down states, a "presentation" example profile that Reset restores.
 5. Proof on the landing page: real visitor numbers from Cloudflare analytics and real classmate quotes only. Never fabricated ones.
