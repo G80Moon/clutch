@@ -49,4 +49,15 @@ console.log('setup start options:', await o.$$eval('#obStart .choice b',e=>e.map
 await o.click('#obNext'); await o.waitForTimeout(400);
 console.log('after setup, connect open:', !(await o.$eval('#cx',e=>e.hidden)), '| list empty of examples:', await o.$$eval('#list .item',e=>e.length));
 await o.screenshot({path:__dirname+'/../.shots/canvas-connect-desktop.png'});
+// a feed link pasted into the chat goes to Canvas import, not the AI; greeting updates; a second tab picks up the change
+const ctx2 = await b.newContext({viewport:{width:1280,height:900}}); const c = await ctx2.newPage(); c.on('pageerror',e=>errs.push(e.message));
+await c.goto('http://localhost:8787/'); await c.waitForTimeout(700); await c.click('.lnav [data-land=skip]'); await c.waitForTimeout(500);
+const c2 = await ctx2.newPage(); await c2.goto('http://localhost:8787/'); await c2.waitForTimeout(900);
+const before2 = await c.request.get('http://localhost:8787/calls').then(r=>r.json()).then(x=>x.length);
+await c.fill('#box', FEED); await c.click('#sendBtn'); await c.waitForTimeout(900);
+const after2 = await c.request.get('http://localhost:8787/calls').then(r=>r.json()).then(x=>x.length);
+console.log('chat link -> review open:', !(await c.$eval('#cx',e=>e.hidden)), '| AI calls made:', after2-before2, '| link in chat bubbles:', await c.$$eval('#msgs .msg.me',els=>els.some(e=>e.textContent.includes('feeds'))));
+await c.click('#cxFoot [data-cxadd]'); await c.waitForTimeout(700);
+console.log('greeting now:', (await c.$eval('#greet .body',e=>e.textContent)).slice(0,70));
+await c2.waitForTimeout(300); console.log('other tab sees import:', await c2.$$eval('#list .item',e=>e.length), 'items, button:', await c2.$eval('#canvasBtn',e=>e.textContent));
 console.log('errors:',errs);await b.close();})();

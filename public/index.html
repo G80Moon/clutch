@@ -1342,6 +1342,7 @@ const blkAhead = b => { const t = ymd(today()); return bDate(b) > t || (bDate(b)
 const blkIn7 = b => { const t = ymd(today()), e = ymd(addDays(today(),6)); return bDate(b) >= t && bDate(b) <= e; };
 const dayLabel = ds => ds===ymd(today()) ? 'Today' : ds===ymd(addDays(today(),1)) ? 'Tomorrow' : DAYS[dayIdx(parse(ds))];
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) {} };
+window.addEventListener('storage', e => { if (e.key !== KEY || !e.newValue) return; try { const next = JSON.parse(e.newValue); if (next && Array.isArray(next.assignments)){ S = next; renderAll(); } } catch(err) {} });
 
 /* ---------- header ---------- */
 function renderHeader(){
@@ -1816,7 +1817,7 @@ $('#trophyBtn').onclick = openTrophies;
 $('#tr').addEventListener('click', e => { if (e.target.closest('[data-trclose]') || e.target === $('#tr')) closeTrophies(); });
 document.addEventListener('keydown', e => { if (e.key==='Escape' && !$('#tr').hidden) closeTrophies(); });
 
-function renderAll(){ renderDecks(); renderTests(); if ($('#grid').dataset.view==='groups') renderGroups(); renderNext(); renderDayCard(); renderHeader(); renderCanvasBtn(); renderMeter(); renderSoon(); renderFilters(); renderList(); renderWeek(); renderTargets(); renderStats(); checkAch(); }
+function renderAll(){ renderDecks(); renderTests(); if ($('#grid').dataset.view==='groups') renderGroups(); renderNext(); renderDayCard(); renderHeader(); renderCanvasBtn(); renderMeter(); renderSoon(); renderFilters(); renderList(); renderWeek(); renderTargets(); renderStats(); checkAch(); if (typeof refreshGreeting === 'function') refreshGreeting(); }
 
 /* ---------- due-soon alerts ---------- */
 const AL = { get on(){ try { return localStorage.getItem('clutch.alerts')==='1'; } catch(e){ return false; } }, set on(v){ try { localStorage.setItem('clutch.alerts', v?'1':'0'); } catch(e){} } };
@@ -2571,10 +2572,11 @@ function greeting(){
 const SUGGEST = ['What should I work on tonight?','Plan study blocks for the rest of my week','My speech is coming up and I\'m nervous','Where do I get help with math on campus?'];
 const SUGGEST_MONEY = ['Make me a budget for $1,200 a month','Explain credit utilization like I\'m 18','Should I accept the unsubsidized loan?','Quiz me on something I got wrong'];
 function renderSuggest(){ const list = $('#grid').dataset.view==='money' ? SUGGEST_MONEY : SUGGEST; suggestEl.innerHTML = '<div class="lbl">Try asking</div>' + list.map(s=>`<button type="button">${esc(s)}</button>`).join(''); }
+function refreshGreeting(){ const g = document.getElementById('greet'); if (!g || turns.length) return; const t = md(greeting()); if (bodyOf(g).innerHTML !== t) bodyOf(g).innerHTML = t; }
 function resetChat(){
   ctl?.abort(); turns = []; suggestEl.remove(); msgs.innerHTML = '';
   const dc = document.createElement('div'); dc.className = 'daycard'; dc.id = 'dayCard'; msgs.append(dc); renderDayCard();
-  addMsg('bot', md(greeting()));
+  addMsg('bot', md(greeting())).id = 'greet';
   cvCardsFor(greeting());
   renderSuggest();
   msgs.append(suggestEl); suggestEl.hidden = false;
@@ -2636,6 +2638,8 @@ let turnChanges = {assignments:[],blocks:[],completed:[]};
 async function send(opts2){
   const text = (opts2 && opts2.text) || $('#box').value.trim();
   if (!text || busy) return;
+  const feed = text.match(/https:\/\/\S+\/feeds\/calendars\/\S+\.ics/);
+  if (feed && !(opts2 && opts2.text)){ $('#box').value = ''; cxConnect(null, feed[0]); return cxGo(); }
   if (sample === undefined){ pending = text; $('#box').value=''; suggestEl.hidden = true; addMsg('me', esc(text)); pendingBubble = addMsg('bot thinking', DOTS); return; }
   if (!sample){ addMsg('me', esc(text)); addMsg('bot err', 'AI chat only works when this page is opened on claude.ai.'); $('#box').value=''; return; }
   $('#box').value = ''; suggestEl.hidden = true;
