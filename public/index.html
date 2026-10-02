@@ -130,10 +130,10 @@ section.block+section.block{margin-top:36px}
 .item.done .check svg{opacity:1;stroke:#fff}
 .item.done .t{text-decoration:line-through;color:var(--muted)}
 /* status colors: green done, yellow due within 2 days, red late */
-.item.st-done,.item.st-soon,.item.st-late{margin-bottom:3px;box-shadow:inset 3px 0 0 var(--st)}
-.item.st-done{--st:var(--ok);background:var(--t-green)}
-.item.st-soon{--st:#D9A300;background:var(--t-yellow)}
-.item.st-late{--st:var(--late);background:var(--t-red)}
+.item.st-done,.item.st-soon,.item.st-late{margin-bottom:3px}
+.item.st-done{background:var(--t-green)}
+.item.st-soon{background:var(--t-yellow)}
+.item.st-late{background:var(--t-red)}
 .item.st-done .check{background:var(--ok);border-color:var(--ok)}
 .t{font-weight:500;line-height:1.4;overflow-wrap:anywhere}
 .meta{font-size:12.5px;color:var(--muted);margin-top:3px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
@@ -144,7 +144,7 @@ section.block+section.block{margin-top:36px}
 .tag-6{background:var(--t-brown);color:var(--t-brown-i)} .tag-7{background:var(--t-red);color:var(--t-red-i)}
 .right{display:grid;justify-items:end;gap:2px}
 .due{font-size:13px;color:var(--ink2);white-space:nowrap;font-variant-numeric:tabular-nums}
-.due.late{color:var(--late)} .due.today{color:var(--accent);font-weight:600} .due.soon{color:var(--soon)}
+.due.late{color:var(--late)} .due.today{color:var(--accent);font-weight:600} .due.near{color:var(--soon)}
 .acts{display:flex;gap:2px}
 .acts button{background:none;border:0;padding:1px 5px;border-radius:5px;font-size:12px;color:var(--muted)}
 .acts button:hover{color:var(--ink);background:var(--line2)}
@@ -296,6 +296,8 @@ form.send{display:block;padding:8px 12px 12px}
 .cxrow:hover{background:var(--hover)}
 .cxrow input{margin:3px 0 0;width:16px;height:16px;accent-color:var(--accent)}
 .cxrow.ev .t{color:var(--ink2)}
+.cxev summary{cursor:pointer;font-size:13.5px;color:var(--muted);padding:6px 0}
+.cxev[open] summary{margin-bottom:4px}
 .cxrow .when{font-size:12.5px;line-height:1.35;color:var(--ink2);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
 .ptpick{display:grid;gap:8px}
 .ptpick .choice{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:center;text-align:left;padding:10px 12px;background:var(--field);border:1px solid var(--line2);border-radius:12px;font:inherit}
@@ -680,6 +682,7 @@ sup.cite{font-size:10.5px;color:var(--accent);font-weight:600;margin-left:2px;cu
 /* onboarding */
 [hidden]{display:none!important}
 .ob{position:fixed;inset:0;background:rgba(25,25,25,.38);backdrop-filter:blur(4px);display:grid;place-items:center;padding:16px;z-index:40;overflow-y:auto}
+body.firstrun .wrap,body.firstrun nav.tabs{visibility:hidden}
 .obcard{background:var(--field);border-radius:16px;box-shadow:0 30px 80px -20px rgba(0,0,0,.4);width:100%;max-width:560px;display:grid;grid-template-rows:auto 1fr auto;overflow:hidden;animation:rise .3s ease-out;max-height:calc(100dvh - 32px)}
 .obtop{display:flex;align-items:center;gap:12px;padding:18px 24px 0}
 .obmark{width:30px;height:30px;background:var(--markimg) center/contain no-repeat;flex:none}
@@ -850,7 +853,7 @@ sup.cite{font-size:10.5px;color:var(--accent);font-weight:600;margin-left:2px;cu
 /* clutch-made items */
 .byc{font-size:10.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--accent-deep);background:var(--accent-soft);padding:2px 6px;border-radius:4px;white-space:nowrap}
 .item.landing{animation:land .55s cubic-bezier(.2,.8,.2,1) both}
-@keyframes land{0%{opacity:0;transform:translateX(-16px) scale(.97);background:var(--accent-soft)}60%{opacity:1;transform:translateX(3px) scale(1)}100%{opacity:1;transform:none;background:transparent}}
+@keyframes land{0%{opacity:0;transform:translateX(-16px) scale(.97);background:var(--accent-soft)}60%{opacity:1;transform:translateX(3px) scale(1)}100%{opacity:1;transform:none}}
 section.block.planning{animation:planglow 1.6s ease-out}
 @keyframes planglow{0%{box-shadow:0 0 0 0 rgba(35,131,226,.0)}20%{box-shadow:0 0 0 6px rgba(35,131,226,.18)}100%{box-shadow:0 0 0 12px rgba(35,131,226,0)}}
 section.block{border-radius:8px}
@@ -1464,8 +1467,8 @@ function dueChip(a){
   if (n < 0) return `<span class="due late">${-n}d late</span>`;
   if (n === 0 && hoursLeft(a) < 0) return `<span class="due late">Late</span>`;
   if (n === 0){ const h = hoursLeft(a); return `<span class="due today">Today${h>=0&&h<24?` · ${h<1?Math.max(1,Math.round(h*60))+' min':Math.round(h)+'h'} left`:''}</span>`; }
-  if (n === 1) return `<span class="due soon">Tomorrow${a.time && a.time!=='23:59' ? ' '+fmtTime(a.time) : ''}</span>`;
-  if (n < 7) return `<span class="due${n<=3?' soon':''}">${DAYS[dayIdx(parse(a.due))]} ${parse(a.due).getDate()}</span>`;
+  if (n === 1) return `<span class="due near">Tomorrow${a.time && a.time!=='23:59' ? ' '+fmtTime(a.time) : ''}</span>`;
+  if (n < 7) return `<span class="due${n<=3?' near':''}">${DAYS[dayIdx(parse(a.due))]} ${parse(a.due).getDate()}</span>`;
   return `<span class="due">${fmtShort(a.due)}</span>`;
 }
 function openWithin(days){ return S.assignments.filter(a => !a.done && diffDays(a.due) <= days); }
@@ -2388,7 +2391,8 @@ function obChips(){
   sg.innerHTML = OB_SUGG.filter(x=>!ob.courses.includes(x)).slice(0,6).map(x=>`<button type="button" data-add="${x}">+ ${x}</button>`).join('');
   $('#obHint').textContent = ob.courses.length ? `${ob.courses.length} class${ob.courses.length>1?'es':''} added` : 'Add at least one, or skip';
 }
-function openOb(from){ ob = obDefaults(); obMin = (S.profile || from==='land') ? 1 : 0; obStep = obMin; obDir = 1; obRender(); $('#ob').hidden = false; }
+function openOb(from){ ob = obDefaults(); obMin = (S.profile || from==='land') ? 1 : 0; obStep = obMin; obDir = 1; obRender(); $('#ob').hidden = false; document.body.classList.toggle('firstrun', !S.profile); }
+function obHide(){ $('#ob').hidden = true; document.body.classList.remove('firstrun'); }
 function showLand(){ $('#aboutMas').textContent = 'M'; $('#land').hidden = false; $('#land').scrollTop = 0; document.body.style.overflow = 'hidden'; $('#land').querySelectorAll('[data-land="skip"]').forEach(b=>b.textContent = S.profile ? 'Back to my planner' : 'Just look around'); }
 function hideLand(){ $('#land').hidden = true; document.body.style.overflow = ''; }
 $('#land').addEventListener('click', e => { const b = e.target.closest('[data-land]'); if(!b) return;
@@ -2404,7 +2408,7 @@ function finishOb(){
   S.decks = keepDecks; S.tests = keepTests; S.groups = keepGroups; if (keepGroups.length) S.groupsInit = true; S.ach = keepAch;
   S.profile = profile; S.money = money; ensureMoney(); checkAch(true);
   if (ob.time && TIME_START[ob.time]) $('#bStart').value = TIME_START[ob.time];
-  save(); $('#ob').hidden = true; renderAll(); resetChat();
+  save(); obHide(); renderAll(); resetChat();
   if (ob.start==='canvas') return cxConnect();
   if (ob.goal==='money') setView('money');
   toast(profile.name ? `Welcome, ${profile.name}. Let's get this semester.` : `You're all set.`);
@@ -2460,7 +2464,7 @@ $('#helloBtn').onclick = openOb;
 function wipeAll(){
   try { localStorage.removeItem(KEY); } catch(e){}
   S = seed(); landed.clear(); if (SM.on) smClose(); if (T.running) startTimer(); setMode('focus');
-  $('#ob').hidden = true; cvClose(); setView('plan'); switchTab('due'); renderAll(); resetChat(); showLand();
+  obHide(); cvClose(); setView('plan'); switchTab('due'); renderAll(); resetChat(); showLand();
 }
 $('#obWipe').onclick = wipeAll;
 document.addEventListener('keydown', e => {
@@ -2470,7 +2474,7 @@ function resetDemo(){
   const keep = {profile:S.profile, money:S.money, decks:S.decks||[], tests:S.tests||[], groups:S.groups||[]};
   S = seed(); S.profile = keep.profile; S.money = keep.money; S.decks = keep.decks || []; S.tests = keep.tests || []; S.groups = keep.groups || []; if (S.groups.length) S.groupsInit = true; ensureMoney(); checkAch(true); save();
   landed.clear(); if (SM.on) smClose(); if (T.running) startTimer(); setMode('focus');
-  $('#ob').hidden = true; setView('plan'); switchTab('due'); renderAll(); resetChat();
+  obHide(); setView('plan'); switchTab('due'); renderAll(); resetChat();
   window.scrollTo({top:0,behavior:'smooth'}); toast('Demo reset. Clean example week loaded.');
 }
 $('#resetDemo').onclick = resetDemo;
@@ -3245,15 +3249,19 @@ async function cxSync(){
 }
 function cxWhen(it){ const d = parse(it.due); return `${LONGDAYS[d.getDay()].slice(0,3)} ${MONTHS[d.getMonth()]} ${d.getDate()}${it.time ? `<br>${fmtTime(it.time)}` : ''}`; }
 function cxReview(items, changed){
+  // assignments first, calendar events ("Start Unit 5") after them, folded away
+  items = [...items.filter(i=>i.kind==='a'), ...items.filter(i=>i.kind!=='a')];
   CX.items = items;
-  const na = items.filter(i=>i.kind==='a').length;
-  $('#cxTitle').textContent = items.length ? `Found ${items.length} coming up` : 'You\'re up to date';
+  const na = items.filter(i=>i.kind==='a').length, ne = items.length - na;
+  const row = (it,i) => `<label class="cxrow${it.kind==='e'?' ev':''}"><input type="checkbox" data-i="${i}"${it.kind==='a'?' checked':''}><div><div class="t">${esc(it.title)}</div><div class="meta"><span class="course ${tagFor(it.course)}">${esc(it.course)}</span><span>${it.kind==='a' ? TYPE[it.type] : 'Calendar event'}</span></div></div><div class="when">${cxWhen(it)}</div></label>`;
+  $('#cxTitle').textContent = na ? `Found ${na} assignment${na>1?'s':''}` : ne ? 'No new assignments' : 'You\'re up to date';
   $('#cxSub').textContent = changed ? `${changed} due date${changed>1?'s':''} changed in Canvas, updated` : 'From your Canvas calendar';
   $('#cxBody').innerHTML = !items.length ? `<p class="cxnote">Everything coming up in Canvas is already in your planner.</p>` : `
-    <p class="cxnote">${na ? 'Assignments are checked. ' : ''}${na < items.length ? 'Calendar events like “Start Unit 5” aren\'t. ' : ''}<b>Uncheck anything you already turned in.</b> Canvas doesn't share what's submitted.</p>
+    ${na ? '<p class="cxnote"><b>Uncheck anything you already turned in.</b> Canvas doesn\'t share what\'s submitted.</p>' : ''}
     ${S.example ? '<label class="cxrep"><input type="checkbox" id="cxReplace" checked> Remove the example assignments</label>' : ''}
-    <div class="cxlist">${items.map((it,i)=>`<label class="cxrow${it.kind==='e'?' ev':''}"><input type="checkbox" data-i="${i}"${it.kind==='a'?' checked':''}><div><div class="t">${esc(it.title)}</div><div class="meta"><span class="course ${tagFor(it.course)}">${esc(it.course)}</span><span>${it.kind==='a' ? TYPE[it.type] : 'Calendar event'}</span></div></div><div class="when">${cxWhen(it)}</div></label>`).join('')}</div>`;
-  $('#cxFoot').innerHTML = items.length ? `<button type="button" class="linkbtn" data-cxall>Select all</button><span class="grow"></span><button type="button" class="btn solid" data-cxadd></button>` : `<span class="grow"></span><button type="button" class="btn solid" data-cxclose>Done</button>`;
+    <div class="cxlist">${items.slice(0, na).map(row).join('')}</div>
+    ${ne ? `<details class="cxev"${na ? '' : ' open'}><summary>${ne} calendar event${ne>1?'s':''} too, like “${esc(items[na].title)}”. Not added unless you check them.</summary><div class="cxlist">${items.slice(na).map((it,j)=>row(it, na+j)).join('')}</div></details>` : ''}`;
+  $('#cxFoot').innerHTML = items.length ? `${na ? '<button type="button" class="linkbtn" data-cxall>Select none</button>' : ''}<span class="grow"></span><button type="button" class="btn solid" data-cxadd></button>` : `<span class="grow"></span><button type="button" class="btn solid" data-cxclose>Done</button>`;
   cxCount(); cxShow();
 }
 function cxCount(){ const b = $('#cxFoot [data-cxadd]'); if (!b) return; const n = $('#cxBody').querySelectorAll('.cxrow input:checked').length; b.textContent = n ? `Add ${n} to my planner` : 'Add nothing'; }
@@ -3312,7 +3320,7 @@ $('#cx').addEventListener('click', e => {
   if (e.target.closest('[data-cxopen]')) return cxOpenCanvas();
   if (e.target.closest('[data-cxpaste]')) return cxPaste();
   if (e.target.closest('[data-cxadd]')) return cxAdd();
-  if (e.target.closest('[data-cxall]')){ const boxes = [...$('#cxBody').querySelectorAll('.cxrow input')], on = boxes.some(b=>!b.checked); boxes.forEach(b=>b.checked = on); e.target.textContent = on ? 'Select none' : 'Select all'; return cxCount(); }
+  if (e.target.closest('[data-cxall]')){ const boxes = [...$('#cxBody').querySelectorAll('.cxrow:not(.ev) input')], on = boxes.some(b=>!b.checked); boxes.forEach(b=>b.checked = on); e.target.textContent = on ? 'Select none' : 'Select all'; return cxCount(); }
   if (e.target.closest('[data-cxoff]')){ delete S.canvas; save(); renderCanvasBtn(); cxClose(); return toast('Canvas disconnected. Your assignments stay.'); }
   if (e.target.closest('[data-cxshot]')){ const f = document.createElement('input'); f.type = 'file'; f.accept = 'image/*'; f.onchange = () => f.files[0] && cxShot(f.files[0]); f.click(); }
 });

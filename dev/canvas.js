@@ -10,7 +10,7 @@ await p.click('#cxCta [data-cxcta]'); await p.waitForTimeout(200);
 await p.fill('#cxUrl','https://example.com/not-a-feed'); await p.click('#cxFoot [data-cxgo]'); await p.waitForTimeout(300);
 console.log('bad link error:', await p.$eval('.cxerr',e=>e.textContent));
 await p.fill('#cxUrl',FEED); await p.waitForTimeout(800); // a valid link starts on its own
-console.log('review:', await p.$eval('#cxTitle',e=>e.textContent), '|', await p.$$eval('.cxrow',rs=>rs.map(r=>`${r.querySelector('input').checked?'[x]':'[ ]'} ${r.querySelector('.course').textContent}: ${r.querySelector('.t').textContent.slice(0,40)} @ ${r.querySelector('.when').innerText.replace('\n',' ')}`).join('\n  ')));
+console.log('review:', await p.$eval('#cxTitle',e=>e.textContent), '| events folded:', await p.$eval('.cxev',e=>!e.open), '|', await p.$$eval('.cxrow',rs=>rs.map(r=>`${r.querySelector('input').checked?'[x]':'[ ]'} ${r.querySelector('.course').textContent}: ${r.querySelector('.t').textContent.slice(0,40)} @ ${r.querySelector('.when').innerText.replace('\n',' ')}`).join('\n  ')));
 console.log('add btn:', await p.$eval('#cxFoot [data-cxadd]',e=>e.textContent), '| replace example:', !!(await p.$('#cxReplace')));
 await p.click('#cxFoot [data-cxadd]'); await p.waitForTimeout(600);
 const rows = await p.$$eval('#list .item',els=>els.map(e=>`${(e.className.match(/st-\w+/)||['plain'])[0]} ${e.querySelector('.t').textContent.slice(0,30)} | ${e.querySelector('.due').textContent}`));
@@ -43,6 +43,8 @@ await m.click('#cxFoot [data-cxadd]'); await m.waitForTimeout(600);
 await m.screenshot({path:__dirname+'/../.shots/canvas-mobile-list.png'});
 const o = await (await b.newContext({viewport:{width:1280,height:900}})).newPage(); o.on('pageerror',e=>errs.push(e.message));
 await o.goto('http://localhost:8787/'); await o.waitForTimeout(700); await o.click('.lnav [data-land=start]'); await o.waitForTimeout(300);
+console.log('setup hides example planner:', await o.$eval('.wrap',e=>getComputedStyle(e).visibility));
+await o.screenshot({path:__dirname+'/../.shots/setup-first.png'});
 await o.fill('#obName','Sam'); await o.click('#obGoal .choice'); await o.waitForTimeout(200);
 for (let i=0;i<3;i++){ await o.click('#obNext'); await o.waitForTimeout(300); }
 console.log('setup start options:', await o.$$eval('#obStart .choice b',e=>e.map(x=>x.textContent).join(' | '), ), '| picked:', await o.$eval('#obStart [aria-pressed=true] b',e=>e.textContent));
