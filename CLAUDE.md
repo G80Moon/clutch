@@ -48,6 +48,7 @@ There is no build step. The head of `public/index.html` (viewport, og tags, icon
 - Flashcards: `decks()`, `saveDeck()`, `studyDeck()` (modal `#fd`), photo → `makeCards(file)`, deduped by `photoHash()` so the same photo returns the same deck. Practice tests: `tests()`, modal `#pt`, `PT` state. Class groups are a deterministic preview (`rng(seed)`, fake classmates), clearly labeled PREVIEW.
 - Trophies: `checkAch(quiet)`; 22 of them; quiet during boot so nothing toasts on the landing page.
 - Canvas: "Connect Canvas" / "Sync Canvas" in the Due header, modal `#cx`, code under `/* Canvas calendar feed */` (`cxParse`, `cxReview`, `cxSync`). The feed link lives in `S.canvas = {url, seen[uids], last}` on the device. Imported assignments carry `src:'canvas', cid (feed UID), url, time ('HH:MM')`. Sync adds only unseen UIDs and follows due date changes. The feed has no "submitted" flag, so done = checked off in Clutch. Fallback: screenshot of the Canvas To Do list read by the AI. Canvas can't be framed (CSP frame-ancestors), so "Open Canvas Calendar" opens a separate window (`cxOpenCanvas`); pasting a valid link starts the import on its own. Setup's last step offers "My Canvas" first. Auto-sync (`cxAuto`) runs on open / tab return when the last sync is over 6h old. "Later" and "Done" fold when they have more than 3 items.
+- Money 101 in the planner (2026-10-02, after the professor said planner + money felt like two apps): the 5 lessons are assignments with `src:'money', lesson, course:'MONEY 101'`, one a week. Done = that lesson's quiz is done (`syncMoney()` mirrors it; the checkbox opens the lesson). Optional: past dates slide forward instead of going late, and they never take Next up, Due soon or alerts. Strip `#mStrip` under the meter. Finishing all 5 sets `S.money.reward` and opens `#mw`: a free semester of Clutch+ "saved for when it launches". There is no Clutch+ checkout, so the copy must stay honest about that. Pitch line: Clutch handles a student's two scarcest things, time and money.
 - Due times: `a.time` is optional; `dueAt()` uses it or 11:59pm. Row colors (`stCls`): green done, yellow due within 48h, red late and not done.
 - Example data: "Example data · Reset · Clear list" in the header. Reset gives a full demo state. Onboarding: `#ob`, `finishOb()`.
 
@@ -61,6 +62,7 @@ node dev/perr.js          # must print "clean"
 node dev/smoke.js         # desktop: chat, plan-my-week tool round, practice test, photo deck
 node dev/mobile.js        # iPhone 13: study a deck, "Have Clutch quiz me", chat box still tappable
 node dev/errors.js        # what students see when the AI fails: daily cap, Claude down, bad key
+node dev/money.js         # Money 101 in the planner: lessons in Due, quizzes turn rows green, reward window, remove/undo, setup question
 node dev/canvas.js        # Canvas feed: connect, review, add, row colors, sync, moved due date (screenshots in .shots/)
 ```
 
