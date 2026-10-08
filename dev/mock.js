@@ -39,6 +39,7 @@ http.createServer((req,res)=>{
       if (hasImage) return sse(res, textEvents(JSON.stringify({topic:'Cell biology notes', course:'BIO 111', cards:[{q:'What does the mitochondria do?',a:'Makes ATP.'},{q:'Ribosome job?',a:'Builds proteins.'},{q:'Cell membrane is made of?',a:'A phospholipid bilayer.'}]})));
       return sse(res, textEvents('```json\n'+JSON.stringify({title:'PSY 101 Exam 1', course:'PSY 101', questions:[{q:'Q1?',o:['a','b','c','d'],a:1,e:'because',t:'memory'},{q:'Q2?',o:['a','b','c','d'],a:2,e:'because',t:'memory'},{q:'Q3?',o:['a','b','c','d'],a:0,e:'because',t:'sleep'}]})+'\n```'));
     }
+    const ask = txt.split('\n\n').pop(); if (/^echo /.test(ask)) return sse(res, textEvents(ask.slice(5))); // tests: make the bot say exactly this
     return sse(res, textEvents('Hey! Tonight, do the MATH homework first, it is due at 11:59pm. Then 25 minutes on the speech outline.'));
   }); return; }
   if (req.url.startsWith('/fail?')){ failNext = Number(new URL(req.url,'http://x').searchParams.get('status')); res.end('ok'); return; }

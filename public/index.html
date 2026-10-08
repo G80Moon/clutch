@@ -1416,7 +1416,7 @@ function burst(x, y, n){
 function centerOf(el){ const r = el.getBoundingClientRect(); return [r.left+r.width/2, r.top+r.height/2]; }
 function weekStats(){
   const m = monday(new Date()), sun = addDays(m,6);
-  const inWeek = S.assignments.filter(a=>{ const d = parse(a.due); return d>=m && d<=sun; });
+  const inWeek = S.assignments.filter(a=>{ if (a.src==='money') return false; const d = parse(a.due); return d>=m && d<=sun; });
   return {total:inWeek.length, done:inWeek.filter(a=>a.done).length, left:inWeek.filter(a=>!a.done).length};
 }
 function completeAssignment(id, srcEl){
@@ -1434,7 +1434,7 @@ function completeAssignment(id, srcEl){
 }
 function greetWord(){ const h = new Date().getHours(); return h<12?'Good morning':h<17?'Good afternoon':'Good evening'; }
 function pickNext(){
-  const all = S.assignments.filter(a=>!a.done), real = all.filter(a=>a.src!=='money'), open = real.length ? real : all;
+  const open = S.assignments.filter(a=>!a.done && a.src!=='money');
   if (!open.length) return null;
   return open.slice().sort((a,b)=>a.due.localeCompare(b.due) || b.hours-a.hours)[0];
 }
@@ -1443,8 +1443,9 @@ function renderNext(){
   const name = S.profile && S.profile.name ? `, ${esc(S.profile.name)}` : '';
   const prog = w.total ? `<div class="nprog" aria-hidden="true"><i style="width:${w.done/w.total*100}%"></i></div><span class="nprog-l">${w.done} of ${w.total} done this week</span>` : '';
   if (!a){
-    el.innerHTML = `<div><p class="hi">${greetWord()}${name}.</p><div class="eyebrow">All caught up</div><h2>Nothing on your list right now.</h2><p class="why">Add what's coming up, or tell Clutch and it'll plan the week for you.</p></div>
-      <div class="nbtns"><button type="button" class="nbtn" data-n="add">Add assignment</button><button type="button" class="nbtn ghost" data-n="ask">Plan with Clutch</button></div>${prog}`;
+    const noCanvas = !cxLink();
+    el.innerHTML = `<div><p class="hi">${greetWord()}${name}.</p><div class="eyebrow">${noCanvas ? 'Get set up' : 'All caught up'}</div><h2>${noCanvas ? 'Bring in your classes.' : 'Nothing on your list right now.'}</h2><p class="why">${noCanvas ? 'Connect Canvas and every assignment shows up here with its real due time.' : 'Add what\'s coming up, or tell Clutch and it\'ll plan the week for you.'}</p></div>
+      <div class="nbtns">${noCanvas ? '<button type="button" class="nbtn" data-n="canvas">Connect Canvas</button><button type="button" class="nbtn ghost" data-n="add">Add assignment</button>' : '<button type="button" class="nbtn" data-n="add">Add assignment</button><button type="button" class="nbtn ghost" data-n="ask">Plan with Clutch</button>'}</div>${prog}`;
     return;
   }
   const n = diffDays(a.due), h = Number(a.hours)||1, sessions = Math.max(1, Math.ceil(h*60/25));
@@ -1463,6 +1464,7 @@ $('#nextCard').onclick = e => {
   const b = e.target.closest('[data-n]'); if(!b) return;
   const act = b.dataset.n;
   if (act==='done') completeAssignment(b.dataset.id, b);
+  if (act==='canvas') cxConnect();
   if (act==='add'){ switchTab('due'); $('#addForm').hidden = false; $('#fDue').value = ymd(addDays(today(),2)); $('#fCourse').focus(); }
   if (act==='ask'){ switchTab('ask'); $('#box').value = 'Help me figure out what is coming up this week and plan it'; $('#box').focus(); }
   if (act==='start'){
@@ -1486,7 +1488,7 @@ function dueChip(a){
   if (n < 7) return `<span class="due${n<=3?' near':''}">${DAYS[dayIdx(parse(a.due))]} ${parse(a.due).getDate()}</span>`;
   return `<span class="due">${fmtShort(a.due)}</span>`;
 }
-function openWithin(days){ return S.assignments.filter(a => !a.done && diffDays(a.due) <= days); }
+function openWithin(days){ return S.assignments.filter(a => !a.done && a.src!=='money' && diffDays(a.due) <= days); }
 function plannedMinutesAhead(){
   return S.blocks.filter(b => blkIn7(b) && blkAhead(b)).reduce((s,b)=>s+b.min,0);
 }
@@ -1515,7 +1517,7 @@ const listOpen = new Set();
 function cxCta(){ return cxLink() || (!S.example && S.assignments.length) ? '' : `<div class="cxcta"><div>${S.example ? '<b>This is example data.</b> ' : ''}Connect Canvas to bring in your real assignments and due times.</div><button type="button" class="btn solid" data-cxcta>Connect Canvas</button></div>`; }
 function renderList(){
   const items = S.assignments.filter(a => filter==='All' || a.course===filter).sort((a,b)=>a.due.localeCompare(b.due));
-  const open = S.assignments.filter(a=>!a.done).length;
+  const open = S.assignments.filter(a=>!a.done && a.src!=='money').length;
   $('#openCount').textContent = open ? `${open} open` : '';
   const groups = [
     ['Overdue','late', a=>!a.done && hoursLeft(a)<0],
@@ -2558,6 +2560,7 @@ function plannerSnapshot(){
   const r = S.log.find(x=>x.date===ymd(today())) || {min:0,n:0};
   const hrsLeft = Math.max(0, Math.round((24*60 - (now.getHours()*60+now.getMinutes()))/60*10)/10);
   return `Right now: ${LONGDAYS[now.getDay()]} ${fmtShort(ymd(now))}, ${now.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}. About ${hrsLeft} hours left in today.
+Canvas: ${cxLink() ? 'connected, assignments sync automatically.' : 'NOT connected. If they have little or no real coursework on the list, tell them to tap "Connect Canvas" at the top of the Due list: it pulls in every assignment with real due times in about 10 seconds. Suggest that instead of asking them to type assignments in.'}
 Open assignments:\n${lines.join('\n')||'(none)'}
 Completed so far: ${done}.
 Study blocks in the next 7 days (today ${ymd(today())} through ${ymd(addDays(today(),6))}):\n${blocks.join('\n')||'(none)'}
@@ -3122,6 +3125,12 @@ const CV_DESC = {
 };
 function cvDue(a){ const d = parse(a.due); return `${LONGDAYS[d.getDay()].slice(0,3)} ${MONTHS[d.getMonth()]} ${d.getDate()} by ${fmtTime(a.time||'23:59')}`; }
 function cvCard(a){
+  if (a.src==='money') return `<div class="cvcard" data-cv="${a.id}">
+    <div class="ico" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M15 9.5c0-1.4-1.3-2-3-2s-3 .7-3 2 1.3 1.8 3 2.2 3 1 3 2.3-1.3 2-3 2-3-.7-3-2"/></svg></div>
+    <div class="src">Money 101 · <b>Lesson</b></div>
+    <div><div class="ttl">${esc(a.title)}</div><div class="sub">${Math.round(a.hours*60)} min · finish all 5 for a free semester of Clutch+</div></div>
+    <button type="button" class="open" data-mlesson="${esc(a.lesson)}">Open lesson</button>
+  </div>`;
   const n = diffDays(a.due), st = a.done ? 'Submitted' : n<0 ? 'Missing' : 'Not submitted';
   return `<div class="cvcard" data-cv="${a.id}">
     <div class="ico" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><path d="M8 13h8M8 17h5"/></svg></div>
@@ -3133,7 +3142,7 @@ function cvCard(a){
 function mentioned(text){
   const t = String(text).toLowerCase(), hits = [];
   for (const a of S.assignments){
-    if (a.done) continue;
+    if (a.done || (a.src!=='canvas' && a.src!=='money')) continue;
     const title = a.title.toLowerCase(), words = title.replace(/[()]/g,'').split(/\s+/).filter(w=>w.length>2);
     const frag = words.slice(0,2).join(' ');
     let score = 0;
@@ -3149,7 +3158,7 @@ function cvCardsFor(text){
   const d = document.createElement('div'); d.style.display='grid'; d.style.gap='6px'; d.innerHTML = list.map(cvCard).join('');
   msgs.append(d); msgs.scrollTop = msgs.scrollHeight;
 }
-msgs.addEventListener('click', e => { const b = e.target.closest('[data-cvopen]'); if (b) cvOpen(b.dataset.cvopen); });
+msgs.addEventListener('click', e => { const b = e.target.closest('[data-cvopen]'); if (b) cvOpen(b.dataset.cvopen); const m = e.target.closest('[data-mlesson]'); if (m) openLesson(m.dataset.mlesson); });
 function cvOpen(id){
   const a = S.assignments.find(x=>x.id===id); if(!a) return;
   const n = diffDays(a.due), pts = CV_POINTS[a.type]||10, desc = (CV_DESC[a.type]||CV_DESC.hw)(a);
