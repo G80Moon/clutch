@@ -177,39 +177,42 @@ label.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 
 .stat b{font-family:var(--display);color:var(--accent-deep);display:block;font-weight:700;font-size:17px;font-variant-numeric:tabular-nums}
 .stat span{font-size:12px;color:var(--muted);white-space:nowrap}
 
-/* week */
-.week{display:grid;gap:5px}
-.tlh{display:grid;grid-template-columns:54px minmax(0,1fr) 86px;gap:10px;font-size:10.5px;color:var(--muted);height:14px}
-.tlh .ticks{position:relative}
-.tlh .ticks span{position:absolute;top:0;transform:translateX(-50%);font-variant-numeric:tabular-nums}
-.day{display:grid;grid-template-columns:54px minmax(0,1fr) 86px;gap:10px;align-items:center;height:32px}
-.day.past{opacity:.5}
-.dh{display:flex;gap:5px;align-items:baseline;font-size:12.5px;color:var(--muted);white-space:nowrap}
+/* week: a 7-day agenda. Study blocks are chips (time, name, length); what's due sits on the right. */
+.week{display:grid}
+.day{display:grid;grid-template-columns:62px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 2px;border-top:1px solid var(--line);min-height:46px}
+.day:first-child{border-top:0}
+.dh{display:flex;gap:5px;align-items:baseline;font-size:13px;color:var(--muted);white-space:nowrap}
 .dh b{font-weight:500;color:var(--ink2);font-variant-numeric:tabular-nums}
 .day.is-today .dh span{color:var(--accent);font-weight:600}
 .day.is-today .dh b{background:var(--accent);color:#fff;border-radius:99px;padding:0 6px;font-weight:600}
-.track{position:relative;height:28px;border-radius:8px;overflow:hidden;background:var(--side);background-image:repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px calc(100% / 17));min-width:0}
-.day.is-today .track{box-shadow:inset 0 0 0 1.5px rgba(35,131,226,.45);background-color:var(--accent-soft)}
-.now{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--late);border-radius:2px;z-index:3}
-.now::before{content:"";position:absolute;top:-3px;left:-3px;width:8px;height:8px;border-radius:50%;background:var(--late)}
-.blk{position:absolute;top:4px;bottom:4px;border-radius:8px;background:var(--accent);color:#fff;font-size:11px;line-height:20px;padding:0 7px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer;min-width:8px;z-index:2;box-shadow:0 1px 2px rgba(15,15,15,.15);display:flex;gap:6px;align-items:center}
-.blk:hover{filter:brightness(1.08)}
-.blk .go{background:none;border:0;padding:0;color:inherit;font:inherit;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1;text-align:left;cursor:pointer}
-.blk .bt{opacity:.8;margin-right:5px;font-variant-numeric:tabular-nums}
-.blk.byclutch{background:var(--accent-deep);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.35),0 1px 2px rgba(15,15,15,.15)}
-.blk .byc{background:rgba(255,255,255,.22);color:#fff;padding:1px 4px;font-size:9px;line-height:1.2;border-radius:5px}
-.blk .x{background:rgba(0,0,0,.25);border:0;color:#fff;width:16px;height:16px;border-radius:5px;font-size:11px;line-height:1;padding:0;display:none;place-items:center;cursor:pointer;flex:none}
-.blk:hover .x{display:grid}
-.blk.tight .bt,.blk.tight .byc,.blk.tight .go{display:none}
-.blk.tight{padding:0}
-.lbl2{position:absolute;top:4px;line-height:20px;font-size:11px;color:var(--ink2);white-space:nowrap;padding-left:5px;pointer-events:none;z-index:1;max-width:38%;overflow:hidden;text-overflow:ellipsis}
-.lbl2 b{color:var(--accent-deep);font-weight:600;margin-right:4px}
-.dues{display:flex;gap:3px;align-items:center;min-width:0;overflow:hidden}
-.duetag{font-size:10.5px;font-weight:600;color:var(--t-red-i);background:var(--t-red);border-radius:5px;padding:0 6px;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.chips{display:flex;flex-wrap:wrap;gap:6px;min-width:0}
+.blk{display:inline-flex;align-items:center;max-width:100%;border-radius:8px;background:var(--accent-soft);color:var(--accent-deep);font-size:12.5px;line-height:1.2}
+.blk:hover{background:#DCEAFB}
+.blk .go{display:flex;align-items:center;gap:6px;flex:1 1 auto;background:none;border:0;padding:6px 2px 6px 9px;color:inherit;font:inherit;min-width:0;cursor:pointer;text-align:left}
+.blk .wkt{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;flex:none}
+.blk.byclutch .wkt::before{content:"✦ ";color:var(--accent)}
+.blk .wkn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink);max-width:28ch;min-width:0;flex:0 1 auto}
+.blk .wkd{color:var(--muted);white-space:nowrap;flex:none}
+.blk.past{opacity:.5}
+.blk .x{background:none;border:0;color:var(--muted);width:22px;height:22px;border-radius:6px;font-size:15px;line-height:1;padding:0;display:grid;place-items:center;cursor:pointer;opacity:0;flex:none}
+.blk:hover .x,.blk:focus-within .x{opacity:1}
+@media (hover:none){.blk .x{opacity:.7}}
+.free{font-size:12.5px;color:var(--muted)}
+.dues{display:flex;justify-content:flex-end;min-width:0}
+.duetag{font-size:11.5px;font-weight:600;color:var(--t-red-i);background:var(--t-red);border-radius:6px;padding:4px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:190px}
 .duetag b{color:var(--late);font-weight:700;margin-right:4px}
-.blk.landing{animation:grow .55s cubic-bezier(.2,.8,.2,1) both;transform-origin:left center}
-@keyframes grow{0%{transform:scaleX(0);opacity:0}70%{opacity:1}100%{transform:none;opacity:1}}
-@media (max-width:560px){.day{grid-template-columns:44px minmax(0,1fr) 70px;gap:8px}.tlh{grid-template-columns:44px minmax(0,1fr) 70px;gap:8px}.lbl2{max-width:45%}.dh b{display:none}.day.is-today .dh b{display:inline}.day.is-today .dh span{display:none}.duetag b{display:none}}
+.chips .blk{min-width:0}
+.blk.landing{animation:chipin .4s ease-out both}
+@keyframes chipin{0%{transform:scale(.85);opacity:0}100%{transform:none;opacity:1}}
+@media (max-width:560px){.day{grid-template-columns:44px minmax(0,1fr);row-gap:6px}.dues{grid-column:2;justify-content:flex-start}.dh b{display:none}.day.is-today .dh b{display:inline}.day.is-today .dh span{display:none}.blk .wkn{max-width:none}}
+/* up next (Focus) */
+.unlist{display:grid;gap:2px}
+.un{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:8px 10px;border-radius:10px}
+.un:hover{background:var(--hover)}
+.un.on{background:var(--accent-soft)}
+.un .t{font-size:14px} .un .meta{margin-top:2px}
+.un .btn{min-height:30px;padding:0 12px;font-size:12.5px}
+.un.on .btn{border-color:transparent;background:none;color:var(--accent);font-weight:600;cursor:default}
 form.blkadd{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding-top:12px}
 form.blkadd .wide{grid-column:1/3}
 
@@ -1118,6 +1121,10 @@ nav.tabs{display:none}
           <div class="fchart" id="fchart" aria-label="Focus minutes, last 7 days"></div>
         </div>
       </section>
+      <section class="block" aria-label="Up next" style="margin-top:22px">
+        <div class="sh"><h2>Up next</h2><div class="aside"><span class="sub">Tap one to focus on it</span></div></div>
+        <div class="unlist" id="upNext"></div>
+      </section>
 
     </div>
     <div class="col c-study">
@@ -1353,6 +1360,8 @@ function seed(){
 let S;
 try { S = JSON.parse(localStorage.getItem(KEY)); } catch(e) {}
 if (!S || !Array.isArray(S.assignments)) S = seed();
+// one-time cleanup: setup used to keep the example week's focus history (50/2, 75/3, 25/1, 100/4 sessions) in real planners
+if (!S.example && !S.logFix){ const sig = new Set(['50/2','75/3','25/1','100/4']); S.log = (S.log||[]).filter(x => x.real || !sig.has(x.min+'/'+(x.n||0))); S.logFix = 1; try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} }
 // older saves keyed blocks by week + day index; convert to a date
 (S.blocks||[]).forEach(b=>{ if (!b.date && b.week){ b.date = ymd(addDays(parse(b.week), Number(b.day)||0)); } });
 const bDate = b => b.date || ymd(today());
@@ -1570,35 +1579,31 @@ let landN = 0, landTimer = null;
 function landSlot(){ const n = landN++; clearTimeout(landTimer); landTimer = setTimeout(()=>{ landN = 0; }, 2500); return new Promise(r=>setTimeout(r, n*480)); }
 function ensureWeekVisible(){ if ($('#grid').dataset.view!=='plan' || window.innerWidth<=1160) return; const sec = $('#week').closest('section'); const r = sec.getBoundingClientRect(); if (r.top < 0 || r.bottom > window.innerHeight) sec.scrollIntoView({block:'center',behavior:'smooth'}); }
 function glowWeek(){ const sec = $('#week').closest('section'); if(!sec) return; sec.classList.remove('planning'); void sec.offsetWidth; sec.classList.add('planning'); }
-const TL0 = 7, TL1 = 24; // 7am to midnight
-const tlPct = hm => { const [h,m] = hm.split(':').map(Number); return Math.min(100, Math.max(0, ((h + m/60) - TL0) / (TL1 - TL0) * 100)); };
+const fmtDur = m => m >= 60 ? (m % 60 ? `${Math.floor(m/60)}h ${m%60}m` : `${m/60}h`) : `${m}m`;
+const blkEnd = b => { const [h,m] = b.start.split(':').map(Number), e = h*60 + m + b.min; return `${pad(Math.floor(e/60))}:${pad(e%60)}`; };
 function renderWeek(){
-  const t = today(), m = t, now = new Date();
-  const sun = addDays(m,6);
-  $('#weekRange').textContent = `${MONTHS[m.getMonth()]} ${m.getDate()} – ${MONTHS[sun.getMonth()]} ${sun.getDate()}`;
-  const ticks = [[8,'8a'],[12,'12p'],[16,'4p'],[20,'8p'],[24,'12a']].map(([h,l])=>`<span style="left:${(h-TL0)/(TL1-TL0)*100}%">${l}</span>`).join('');
-  let html = `<div class="tlh"><span></span><div class="ticks">${ticks}</div><span></span></div>`;
+  const t = today(), sun = addDays(t,6), tY = ymd(t), nowS = nowHM();
+  $('#weekRange').textContent = `${MONTHS[t.getMonth()]} ${t.getDate()} – ${MONTHS[sun.getMonth()]} ${sun.getDate()}`;
+  let html = '';
   for (let i=0;i<7;i++){
-    const d = addDays(m,i), ds = ymd(d), isT = ds===ymd(t);
-    const dues = S.assignments.filter(a=>!a.done && a.due===ds);
+    const d = addDays(t,i), ds = ymd(d), isT = ds===tY;
+    const dues = S.assignments.filter(a=>!a.done && a.src!=='money' && a.due===ds);
     const blocks = S.blocks.filter(b=>bDate(b)===ds).sort((a,b)=>a.start.localeCompare(b.start));
-    const dueHtml = `<div class="dues">${dues.length ? (dues.length>1 ? `<span class="duetag" title="${dues.map(a=>esc(a.course+': '+a.title)).join('\n')}"><b>Due</b>${dues.length} things</span>` : `<span class="duetag" title="${esc(dues[0].title)}"><b>Due</b>${esc(dues[0].course)}</span>`) : ''}</div>`;
-    const nowHtml = isT ? `<i class="now" style="left:${tlPct(now.toTimeString().slice(0,5))}%" title="Now"></i>` : '';
-    const bars = blocks.map(b=>{ const l = tlPct(b.start), w = Math.max(1.5, b.min/((TL1-TL0)*60)*100); const tight = w < 12;
-      const ww = Math.min(w, 100-l);
-      return `<div class="blk${b.by==='clutch'?' byclutch':''}${tight?' tight':''}${landing(b)}" data-id="${b.id}" style="left:${l}%;width:${ww}%" title="${fmtTime(b.start)}, ${b.min} min: ${esc(b.label)}${b.by==='clutch'?' (planned by Clutch)':''}"><button type="button" class="go" data-act="go"><span class="bt">${fmtTime(b.start)}</span>${esc(b.label)}</button>${b.by==='clutch'?'<span class="byc">Clutch</span>':''}<button type="button" class="x" data-act="rm" aria-label="Remove ${esc(b.label)}">×</button></div>${tight ? `<span class="lbl2" style="left:${l+ww}%"><b>${fmtTime(b.start)}</b>${esc(b.label)}</span>` : ''}`; }).join('');
-    html += `<div class="day${isT?' is-today':''}${d<t?' past':''}"><div class="dh"><span>${DAYS[dayIdx(d)]}</span><b>${d.getDate()}</b></div><div class="track">${bars}${nowHtml}</div>${dueHtml}</div>`;
+    const chips = blocks.map(b=>`<div class="blk${b.by==='clutch'?' byclutch':''}${isT && blkEnd(b) <= nowS ? ' past' : ''}${landing(b)}" data-id="${b.id}" title="${fmtTime(b.start)}, ${b.min} min: ${esc(b.label)}${b.by==='clutch'?' (planned by Clutch)':''}. Tap to focus on it."><button type="button" class="go" data-act="go"><span class="wkt">${fmtTime(b.start)}</span><span class="wkn">${esc(b.label)}</span><span class="wkd">${fmtDur(b.min)}</span></button><button type="button" class="x" data-act="rm" aria-label="Remove ${esc(b.label)}">×</button></div>`).join('');
+    const courses = [...new Set(dues.map(a=>a.course))];
+    const due = dues.length ? `<span class="duetag" title="${dues.map(a=>esc(a.course+': '+a.title)).join('\n')}"><b>Due</b>${esc(courses.slice(0,2).join(', '))}${courses.length>2?` +${courses.length-2}`:''}</span>` : '';
+    html += `<div class="day${isT?' is-today':''}"><div class="dh"><span>${isT?'Today':DAYS[dayIdx(d)]}</span><b>${d.getDate()}</b></div><div class="chips">${chips || `<span class="free">${isT?'Nothing blocked yet':'Free'}</span>`}</div><div class="dues">${due}</div></div>`;
   }
   $('#week').innerHTML = html;
   const sel = $('#bDay'), cur = sel.value;
-  sel.innerHTML = Array.from({length:7},(_,i)=>{ const d = addDays(m,i); return `<option value="${ymd(d)}">${i===0?'Today':DAYS[dayIdx(d)]} ${d.getDate()}</option>`; }).join('');
-  sel.value = [...sel.options].some(o=>o.value===cur) ? cur : ymd(t);
+  sel.innerHTML = Array.from({length:7},(_,i)=>{ const d = addDays(t,i); return `<option value="${ymd(d)}">${i===0?'Today':DAYS[dayIdx(d)]} ${d.getDate()}</option>`; }).join('');
+  sel.value = [...sel.options].some(o=>o.value===cur) ? cur : tY;
 }
 $('#week').onclick = e => {
   let b = e.target.closest('[data-act]'); const bar = e.target.closest('.blk'); if(!b && bar) b = {dataset:{act:'go'}, closest:()=>bar}; if(!b) return;
   const id = (b.closest('.blk')||bar).dataset.id, blk = S.blocks.find(x=>x.id===id); if(!blk) return;
   if (b.dataset.act==='rm'){ S.blocks = S.blocks.filter(x=>x.id!==id); save(); renderAll(); }
-  if (b.dataset.act==='go'){ setTarget('b:'+id); }
+  if (b.dataset.act==='go'){ T.picked = true; setTarget('b:'+id); if ($('#grid').dataset.view!=='focus') setView('focus'); toast(`Focusing on ${blk.label}.`); }
 };
 $('#wkAdd').onclick = () => { const f = $('#blkForm'); f.hidden = !f.hidden; if (!f.hidden) $('#bLabel').focus(); };
 $('#wkPlan').onclick = () => {
@@ -1639,7 +1644,12 @@ function renderFocusOn(){
   const go = $('#smOpen'), started = T.left < T.total;
   go.textContent = T.mode!=='focus' ? (T.running ? 'Pause break' : started ? 'Resume break' : 'Start break') : (T.running ? 'Back to study mode' : started ? 'Resume focus' : 'Start focus');
   $('#resetBtn').hidden = !(started && !T.running);
+  const un = $('#upNext'); if (!un) return;
+  const open = S.assignments.filter(a=>!a.done && a.src!=='money').sort((a,b)=>dueAt(a)-dueAt(b)).slice(0,5);
+  un.innerHTML = open.length ? open.map(a=>{ const on = T.target==='a:'+a.id; return `<div class="un${on?' on':''}"><div><div class="t">${esc(a.title)}</div><div class="meta"><span class="course ${tagFor(a.course)}">${esc(a.course)}</span><span>${TYPE[a.type]||'Task'} · ${a.hours}h</span></div></div>${dueChip(a)}<button type="button" class="btn" data-un="${a.id}"${on?' disabled':''}>${on?'Selected':'Focus'}</button></div>`; }).join('')
+    : `<div class="empty">Nothing open. ${cxLink() ? 'Enjoy it.' : 'Connect Canvas to bring in your assignments.'}</div>`;
 }
+$('#upNext').addEventListener('click', e => { const b = e.target.closest('[data-un]'); if (!b) return; T.picked = true; setTarget('a:'+b.dataset.un); $('#fOn').scrollIntoView({block:'nearest', behavior:'smooth'}); });
 function setTarget(v){ T.target = v; $('#target').value = v; renderFocusOn(); }
 $('#target').onchange = e => { T.target = e.target.value; T.picked = true; e.target.hidden = true; renderFocusOn(); };
 $('#fOn').addEventListener('click', e => { if (e.target.closest('#fChange')){ const sel = $('#target'); sel.hidden = !sel.hidden; if (!sel.hidden) sel.focus(); } });
@@ -2440,7 +2450,7 @@ $('#aboutBtn').onclick = showLand;
 function finishOb(){
   obSaveField();
   const profile = {name: ob.name, goal: ob.goal, courses: ob.courses.slice(), time: ob.time, work: ob.work, target: ob.target || studyMath().low};
-  const money = S.money, log = S.log || [], keepDecks = S.decks || [], keepTests = S.tests || [], keepGroups = S.groups || [], keepAch = S.ach || {};
+  const money = S.money, log = (S.log || []).filter(x => !S.example || x.real), keepDecks = S.decks || [], keepTests = S.tests || [], keepGroups = S.groups || [], keepAch = S.ach || {};
   if (ob.start==='example'){ S = seed(); S.log = log.length ? log : S.log; }
   else if (ob.start==='empty' || ob.start==='canvas'){ S = {example:false, assignments:[], blocks:[], log}; }
   S.decks = keepDecks; S.tests = keepTests; S.groups = keepGroups; if (keepGroups.length) S.groupsInit = true; S.ach = keepAch;
