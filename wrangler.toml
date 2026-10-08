@@ -6,3 +6,9 @@ pages_build_output_dir = "public"
 [[kv_namespaces]]
 binding = "RATE"
 id = "d6697f210b0943de9d13840486aa33bd"
+
+# class groups (see functions/api/groups.js, schema in db/schema.sql)
+[[d1_databases]]
+binding = "DB"
+database_name = "clutch-groups"
+database_id = "75424a98-fc10-4b46-8f11-d3dbac3897fb"

@@ -6,6 +6,16 @@ const http = require('http'), fs = require('fs');
 const sse = (res, events) => { res.writeHead(200, {'content-type':'text/event-stream'}); let i=0; const tick=()=>{ if(i>=events.length){ res.end(); return; } const e=events[i++]; res.write(`event: ${e.type}\ndata: ${JSON.stringify(e)}\n\n`); setTimeout(tick, 15); }; tick(); };
 const textEvents = t => { const ev=[{type:'message_start'},{type:'content_block_start',index:0,content_block:{type:'text',text:''}}]; for (const w of t.match(/.{1,12}/g)) ev.push({type:'content_block_delta',index:0,delta:{type:'text_delta',text:w}}); ev.push({type:'content_block_stop',index:0},{type:'message_delta',delta:{stop_reason:'end_turn'}},{type:'message_stop'}); return ev; };
 let calls = [];
+// groups: run the real Pages Function against an in-memory SQLite that speaks enough of D1's API
+const { DatabaseSync } = require('node:sqlite');
+const sdb = new DatabaseSync(':memory:'); sdb.exec(fs.readFileSync(__dirname + '/../db/schema.sql', 'utf8'));
+const D1 = {
+  prepare(sql){ let args = []; const st = { bind(...a){ args = a; return st; },
+    async first(){ return sdb.prepare(sql).get(...args) ?? null; }, async all(){ return { results: sdb.prepare(sql).all(...args) }; },
+    async run(){ sdb.prepare(sql).run(...args); return { success: true }; }, _exec(){ sdb.prepare(sql).run(...args); } }; return st; },
+  async batch(list){ sdb.exec('BEGIN'); try { for (const s of list) s._exec(); sdb.exec('COMMIT'); } catch(e){ sdb.exec('ROLLBACK'); throw e; } return []; }
+};
+const groupsFn = import('data:text/javascript;base64,' + Buffer.from(fs.readFileSync(__dirname + '/../functions/api/groups.js', 'utf8')).toString('base64'));
 // fake Canvas Calendar Feed, dates relative to now so it never goes stale. GET /canvas-move shifts one due date (tests sync).
 let moved = false, failNext = 0;
 const icsT = (days, h, m) => { const d = new Date(); d.setDate(d.getDate()+days); d.setHours(h, m, 0, 0); return d.toISOString().replace(/[-:]/g,'').replace(/\.\d+/,''); };
@@ -23,7 +33,10 @@ const feed = () => { const ev = [
     return ['BEGIN:VEVENT', dt.startsWith('VALUE') ? `DTSTART;${dt}` : `DTSTART:${dt}`, 'CLASS:PUBLIC', folded, `URL;VALUE=URI:https://canvas.morainevalley.edu/calendar?include_contexts=course_1#${anchor}`, `UID:${uid}`, 'END:VEVENT']; }), 'END:VCALENDAR'].join('\r\n'); };
 http.createServer((req,res)=>{
   if (req.method==='GET' && (req.url==='/' || req.url==='/m')){ res.writeHead(200,{'content-type':'text/html'}); res.end(fs.readFileSync(__dirname+'/../public/index.html')); return; }
-  if (req.url==='/api/health'){ res.writeHead(200,{'content-type':'application/json'}); res.end('{"ok":true}'); return; }
+  if (req.url==='/api/health'){ res.writeHead(200,{'content-type':'application/json'}); res.end('{"ok":true,"groups":true}'); return; }
+  if (req.url==='/api/groups'){ let b=''; req.on('data',d=>b+=d); req.on('end', async ()=>{
+    const r = await (await groupsFn).onRequestPost({ request: new Request('http://localhost:8787/api/groups', { method:'POST', headers:{ 'content-type':'application/json', 'x-clutch-id': req.headers['x-clutch-id']||'' }, body: b }), env: { DB: D1 } });
+    res.writeHead(r.status, {'content-type':'application/json'}); res.end(await r.text()); }); return; }
   if (req.url==='/api/chat' && failNext){ const st = failNext; failNext = 0; res.writeHead(st,{'content-type':'application/json'}); res.end(JSON.stringify({error: st===429 ? "You've used today's AI messages on this device. They reset overnight." : st===503 ? 'The API key on this deployment was rejected.' : 'Upstream error.'})); return; }
   if (req.url==='/api/chat'){ let b=''; req.on('data',d=>b+=d); req.on('end',()=>{ const body=JSON.parse(b); calls.push(body);
     const last = body.messages[body.messages.length-1];
