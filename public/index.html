@@ -237,6 +237,10 @@ form.blkadd .wide{grid-column:1/3}
 .msg ul{margin:4px 0 0;padding-left:18px}
 .msg.thinking .body{color:var(--muted)}
 .msg.err .body{color:var(--late)}
+.msg .say{display:inline-flex;align-items:center;gap:5px;margin:6px 0 0 -6px;background:none;border:0;padding:3px 8px 3px 6px;border-radius:8px;font:inherit;font-size:12.5px;color:var(--muted);cursor:pointer}
+.msg .say:hover{color:var(--ink);background:var(--line2)}
+.msg .say svg{width:15px;height:15px}
+.msg .say[aria-pressed=true]{color:var(--accent)}
 .action{font-size:12.5px;color:var(--ok);margin-left:34px;padding:4px 8px;background:var(--t-green);border-radius:4px;align-self:flex-start}
 .suggest{padding:0 12px 10px;display:grid;gap:0}
 .suggest .lbl{padding:0 4px 4px}
@@ -2652,6 +2656,32 @@ function md(text){
 function mascot(state, extra){ return `<span class="mas ${extra||''}" aria-hidden="true"></span>`; }
 function addMsg(cls, html){ const d = document.createElement('div'); d.className = 'msg '+cls; d.innerHTML = cls.startsWith('me') ? `<span class="who lbl">You</span><div class="body">${html}</div>` : `<span class="who" title="Clutch">${mascot(cls.includes('thinking')?'think':'idle')}</span><div class="body">${html}</div>`; msgs.append(d); msgs.scrollTop = msgs.scrollHeight; return d; }
 const bodyOf = el => el.querySelector('.body');
+/* read a reply out loud with the voice built into the phone or browser (nothing leaves the device) */
+const TTS = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+const SAY_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+let sayingBtn = null;
+function sayVoice(){ const v = speechSynthesis.getVoices().filter(v=>/^en[-_]US/i.test(v.lang)); return v.find(v=>/Samantha|Google US English|Aria|Jenny/i.test(v.name)) || v.find(v=>v.localService) || v[0] || null; }
+function sayStop(){ if (!TTS) return; speechSynthesis.cancel(); if (sayingBtn){ sayingBtn.setAttribute('aria-pressed','false'); sayingBtn.lastChild.textContent = 'Listen'; } sayingBtn = null; }
+function sayBtn(bubble){
+  if (!TTS || !bubble || bubble.querySelector('.say')) return;
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'say'; b.setAttribute('aria-pressed','false'); b.innerHTML = SAY_ICON + '<span>Listen</span>';
+  b.onclick = () => {
+    if (sayingBtn === b){ sayStop(); return; }
+    sayStop();
+    const copy = bodyOf(bubble).cloneNode(true); copy.querySelectorAll('.say').forEach(x=>x.remove()); copy.querySelectorAll('p,li,br,h3').forEach(x=>x.after(' '));
+    const text = copy.textContent.replace(/\s+/g,' ').trim(); if (!text) return;
+    // short pieces: Chrome stops long utterances after about 15 seconds
+    const parts = (text.match(/[^.!?]+[.!?]*\s*/g) || [text]).reduce((a,p)=>{ if (a.length && (a[a.length-1]+p).length < 220) a[a.length-1] += p; else a.push(p); return a; }, []);
+    const voice = sayVoice();
+    parts.forEach((p,i)=>{ const u = new SpeechSynthesisUtterance(p.trim()); if (voice) u.voice = voice; u.lang = voice ? voice.lang : 'en-US'; u.rate = 1.05;
+      if (i === parts.length-1) u.onend = () => { if (sayingBtn === b) sayStop(); };
+      u.onerror = () => { if (sayingBtn === b) sayStop(); };
+      speechSynthesis.speak(u); });
+    sayingBtn = b; b.setAttribute('aria-pressed','true'); b.lastChild.textContent = 'Stop';
+  };
+  bodyOf(bubble).append(b);
+}
+if (TTS) speechSynthesis.getVoices();
 function addAction(text){ const d = document.createElement('div'); d.className='action'; d.textContent = '→ '+text; msgs.append(d); msgs.scrollTop = msgs.scrollHeight; }
 
 const DOTS = '<span class="dots" aria-label="Clutch is typing"><i></i><i></i><i></i></span>';
@@ -2740,6 +2770,7 @@ async function send(opts2){
   if (!sample){ addMsg('me', esc(text)); addMsg('bot err', 'AI chat only works when this page is opened on claude.ai.'); $('#box').value=''; return; }
   $('#box').value = ''; suggestEl.hidden = true;
   if (!(opts2 && opts2.quiet)) addMsg('me', esc((opts2 && opts2.display) || text));
+  sayStop();
   turns.push({role:'user',content:text});
   if (turns.length > 14) turns = turns.slice(-14);
   while (turns[0] && turns[0].role !== 'user') turns.shift();
@@ -2756,7 +2787,7 @@ async function send(opts2){
     const res = await sample([{role:'user',content:rules()}, ...turns], opts);
     // keep only the final round's words in history
     const clean = res.text.trim();
-    bubble.classList.remove('thinking'); bodyOf(bubble).innerHTML = md(clean); 
+    bubble.classList.remove('thinking'); bodyOf(bubble).innerHTML = md(clean); sayBtn(bubble);
     msgs.append(bubble); msgs.scrollTop = msgs.scrollHeight;
     turns.push({role:'assistant',content:clean});
     cvCardsFor(clean);
