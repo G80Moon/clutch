@@ -2696,11 +2696,11 @@ function greeting(){
 const SUGGEST = ['What should I work on tonight?','Plan study blocks for the rest of my week','My speech is coming up and I\'m nervous','Where do I get help with math on campus?'];
 const SUGGEST_MONEY = ['Make me a budget for $1,200 a month','Explain credit utilization like I\'m 18','Should I accept the unsubsidized loan?','Quiz me on something I got wrong'];
 function renderSuggest(){ const list = $('#grid').dataset.view==='money' ? SUGGEST_MONEY : SUGGEST; suggestEl.innerHTML = '<div class="lbl">Try asking</div>' + list.map(s=>`<button type="button">${esc(s)}</button>`).join(''); }
-function refreshGreeting(){ const g = document.getElementById('greet'); if (!g || turns.length) return; const t = md(greeting()); if (bodyOf(g).innerHTML !== t) bodyOf(g).innerHTML = t; }
+function refreshGreeting(){ const g = document.getElementById('greet'); if (!g || turns.length) return; const t = md(greeting()); if (g.dataset.md !== t){ g.dataset.md = t; bodyOf(g).innerHTML = t; sayBtn(g); } }
 function resetChat(){
-  ctl?.abort(); turns = []; suggestEl.remove(); msgs.innerHTML = '';
+  ctl?.abort(); sayStop(); turns = []; suggestEl.remove(); msgs.innerHTML = '';
   const dc = document.createElement('div'); dc.className = 'daycard'; dc.id = 'dayCard'; msgs.append(dc); renderDayCard();
-  addMsg('bot', md(greeting())).id = 'greet';
+  const gt = md(greeting()), g = addMsg('bot', gt); g.id = 'greet'; g.dataset.md = gt; sayBtn(g);
   cvCardsFor(greeting());
   renderSuggest();
   msgs.append(suggestEl); suggestEl.hidden = false;

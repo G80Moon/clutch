@@ -9,6 +9,7 @@ const { chromium, devices } = require('playwright');
   const phone = ctxOpt.viewport.width < 500;
   await p.click(phone ? '.lhero [data-land=skip]' : '.lnav [data-land=skip]'); await p.waitForTimeout(500);
   if (phone){ await p.click('[data-tab=ask]'); await p.waitForTimeout(300); }
+  console.log('greeting has Listen:', !!(await p.$('#greet .say')));
   await p.fill('#box','What should I work on tonight?'); await p.click('#sendBtn'); await p.waitForTimeout(2500);
   const btns = await p.$$('#msgs .say'), btn = btns[btns.length-1];
   console.log(phone ? 'iPhone' : 'desktop', '| button:', btn && await btn.innerText());
