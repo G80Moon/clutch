@@ -4,7 +4,7 @@
 // Run: node dev/mock.js   (leave it running, then run the tests in another terminal)
 const http = require('http'), fs = require('fs');
 const sse = (res, events) => { res.writeHead(200, {'content-type':'text/event-stream'}); let i=0; const tick=()=>{ if(i>=events.length){ res.end(); return; } const e=events[i++]; res.write(`event: ${e.type}\ndata: ${JSON.stringify(e)}\n\n`); setTimeout(tick, 15); }; tick(); };
-const textEvents = t => { const ev=[{type:'message_start'},{type:'content_block_start',index:0,content_block:{type:'text',text:''}}]; for (const w of t.match(/.{1,12}/g)) ev.push({type:'content_block_delta',index:0,delta:{type:'text_delta',text:w}}); ev.push({type:'content_block_stop',index:0},{type:'message_delta',delta:{stop_reason:'end_turn'}},{type:'message_stop'}); return ev; };
+const textEvents = t => { const ev=[{type:'message_start'},{type:'content_block_start',index:0,content_block:{type:'text',text:''}}]; for (const w of t.match(/[\s\S]{1,12}/g)) ev.push({type:'content_block_delta',index:0,delta:{type:'text_delta',text:w}}); ev.push({type:'content_block_stop',index:0},{type:'message_delta',delta:{stop_reason:'end_turn'}},{type:'message_stop'}); return ev; };
 let calls = [];
 // groups: run the real Pages Function against an in-memory SQLite that speaks enough of D1's API
 const { DatabaseSync } = require('node:sqlite');
@@ -53,6 +53,7 @@ http.createServer((req,res)=>{
       return sse(res, textEvents('```json\n'+JSON.stringify({title:'PSY 101 Exam 1', course:'PSY 101', questions:[{q:'Q1?',o:['a','b','c','d'],a:1,e:'because',t:'memory'},{q:'Q2?',o:['a','b','c','d'],a:2,e:'because',t:'memory'},{q:'Q3?',o:['a','b','c','d'],a:0,e:'because',t:'sleep'}]})+'\n```'));
     }
     const ask = txt.split('\n\n').pop(); if (/^echo /.test(ask)) return sse(res, textEvents(ask.slice(5))); // tests: make the bot say exactly this
+    if (/^what should i work on tonight\??$/i.test(ask.trim())) return sse(res, textEvents("Start with **MATH Homework 3.4 (online)**. It's due at 11:59pm tonight and it's about an hour, so knock it out first.\n\nThen put 25 minutes into your **COM 101** speech outline, which is due tomorrow. That's it for tonight. Your PSY reading can wait for your Saturday block.")); // nicer reply for screenshots
     return sse(res, textEvents('Hey! Tonight, do the MATH homework first, it is due at 11:59pm. Then 25 minutes on the speech outline.'));
   }); return; }
   if (req.url.startsWith('/fail?')){ failNext = Number(new URL(req.url,'http://x').searchParams.get('status')); res.end('ok'); return; }
