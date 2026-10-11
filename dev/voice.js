@@ -2,7 +2,8 @@
 const { chromium, devices } = require('playwright');
 const FAKE = () => { window.webkitSpeechRecognition = class { start(){ window.__rec = this; const said = window.__sayList || ['what should I', 'what should I work on', 'what should I work on tonight'];
   said.forEach((t,i) => setTimeout(() => this.onresult && this.onresult({ results: [Object.assign([{ transcript: t }], { isFinal: i === said.length-1 })] }), 100*(i+1))); }
-  stop(){ setTimeout(() => this.onend && this.onend(), 20); } }; window.SpeechRecognition = window.webkitSpeechRecognition; };
+  stop(){ this.finish(); } abort(){ this.finish(); }
+  finish(){ const said = window.__sayList || ['what should I work on tonight']; setTimeout(() => { this.onresult && this.onresult({ results: [Object.assign([{ transcript: said[said.length-1] }], { isFinal: true })] }); this.onend && this.onend(); }, 30); } }; window.SpeechRecognition = window.webkitSpeechRecognition; };
 (async()=>{ const b = await chromium.launch(); const errs=[];
  for (const ctxOpt of [{viewport:{width:1540,height:880}}, {...devices['iPhone 13']}]){
   const p = await (await b.newContext(ctxOpt)).newPage(); p.on('pageerror',e=>errs.push(e.message)); await p.addInitScript(FAKE);
@@ -23,4 +24,9 @@ const FAKE = () => { window.webkitSpeechRecognition = class { start(){ window.__
  await h.click('#micBtn'); await h.waitForTimeout(400); console.log('"he clutch what should I do tonight" ->', JSON.stringify(await h.$eval('#box', e=>e.value)));
  const n = await (await b.newContext()).newPage(); await n.addInitScript(()=>{ delete window.webkitSpeechRecognition; delete window.SpeechRecognition; });
  await n.goto('http://localhost:8787/'); await n.waitForTimeout(600); console.log('no speech support -> mic hidden:', await n.$eval('#micBtn', e=>e.hidden));
+ // send while still listening: the engine's late final result must not refill the box
+ const q = await (await b.newContext({viewport:{width:1280,height:800}})).newPage(); await q.addInitScript(FAKE);
+ await q.goto('http://localhost:8787/'); await q.waitForTimeout(800); await q.click('.lnav [data-land=skip]'); await q.waitForTimeout(400);
+ await q.click('#micBtn'); await q.waitForTimeout(400); await q.click('#sendBtn'); await q.waitForTimeout(400);
+ console.log('box after sending mid-listen:', JSON.stringify(await q.$eval('#box', e=>e.value)), '| mic:', await q.$eval('#micBtn', e=>e.getAttribute('aria-pressed')));
  console.log('errors:', errs); await b.close(); })();

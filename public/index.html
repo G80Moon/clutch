@@ -2746,13 +2746,13 @@ let turnChanges = {assignments:[],blocks:[],completed:[]};
 async function send(opts2){
   const text = (opts2 && opts2.text) || $('#box').value.trim();
   if (!text || busy) return;
+  micStop(true);
   const feed = text.match(/https:\/\/\S+\/feeds\/calendars\/\S+\.ics/);
   if (feed && !(opts2 && opts2.text)){ $('#box').value = ''; cxConnect(null, feed[0]); return cxGo(); }
   if (sample === undefined){ pending = text; $('#box').value=''; suggestEl.hidden = true; addMsg('me', esc(text)); pendingBubble = addMsg('bot thinking', DOTS); return; }
   if (!sample){ addMsg('me', esc(text)); addMsg('bot err', 'AI chat only works when this page is opened on claude.ai.'); $('#box').value=''; return; }
   $('#box').value = ''; suggestEl.hidden = true;
   if (!(opts2 && opts2.quiet)) addMsg('me', esc((opts2 && opts2.display) || text));
-  micStop();
   turns.push({role:'user',content:text});
   if (turns.length > 14) turns = turns.slice(-14);
   while (turns[0] && turns[0].role !== 'user') turns.shift();
@@ -3178,7 +3178,8 @@ function fixSaid(t, first){
   if (first){ t = t.replace(/^\s*(?:he|hey|hay|hi|a|the|eh)?\s*(?:clutch|cluch|klatch|kludge)(?:'s|es)?\b[\s,.!]*/i, m => 'Hey Clutch' + (/\S/.test(t.slice(m.length)) ? ', ' : '')); t = t.charAt(0).toUpperCase() + t.slice(1); }
   return t;
 }
-function micStop(){ if (rec) try { rec.stop(); } catch(e){} }
+// sending throws away whatever the engine is still finishing, otherwise its last result refills the box
+function micStop(discard){ if (!rec) return; if (discard){ rec.onresult = null; try { rec.abort(); } catch(e){} micOff(); return; } try { rec.stop(); } catch(e){} }
 function micOff(){ rec = null; micBtn.classList.remove('on'); micBtn.setAttribute('aria-pressed','false'); micBtn.title = micBtn.ariaLabel = 'Talk instead of typing'; }
 micBtn.onclick = () => {
   if (rec){ micStop(); return; }
