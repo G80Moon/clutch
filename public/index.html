@@ -2653,7 +2653,8 @@ let turns = [];
 const msgs = $('#msgs');
 
 function md(text){
-  text = String(text).replace(/\s*—\s*/g, ', ').replace(/\s*–\s*/g, ', ');
+  // the planner snapshot tags each item with its id like [v3uy0f5] for the tools; the model sometimes copies it into the reply
+  text = String(text).replace(/\[(?=[a-z0-9]{6,8}\])(?=[^\]]*\d)(?=[^\]]*[a-z])[a-z0-9]+\]\s*/g, '').replace(/\s*—\s*/g, ', ').replace(/\s*–\s*/g, ', ');
   const blocks = esc(text).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').split(/\n{2,}/);
   return blocks.map(b=>{
     const ls = b.split('\n');
