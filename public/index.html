@@ -3163,13 +3163,19 @@ $('#box').addEventListener('keydown', e => { if (e.key==='Enter' && !e.shiftKey)
 const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
 const micBtn = $('#micBtn'); let rec = null;
 if (!SpeechRec) micBtn.hidden = true;
+// speech engines don't know the word "Clutch", so "hey Clutch" comes back as "he clutch", "hey clutch's" and so on
+function fixSaid(t, first){
+  t = t.replace(/\b(?:clutch|cluch|klatch|kludge)(?:'s|es)?\b(?=[\s,.!?]*(?:what|how|can|could|when|where|which|who|why|is|are|do|does|help|plan|make|add|start|tell|give|I|i'm|im|my)\b)/gi, 'Clutch');
+  if (first){ t = t.replace(/^\s*(?:he|hey|hay|hi|a|the|eh)?\s*(?:clutch|cluch|klatch|kludge)(?:'s|es)?\b[\s,.!]*/i, m => 'Hey Clutch' + (/\S/.test(t.slice(m.length)) ? ', ' : '')); t = t.charAt(0).toUpperCase() + t.slice(1); }
+  return t;
+}
 function micStop(){ if (rec) try { rec.stop(); } catch(e){} }
 function micOff(){ rec = null; micBtn.classList.remove('on'); micBtn.setAttribute('aria-pressed','false'); micBtn.title = micBtn.ariaLabel = 'Talk instead of typing'; }
 micBtn.onclick = () => {
   if (rec){ micStop(); return; }
   const box = $('#box'), base = box.value.trim() ? box.value.trim() + ' ' : '';
   const r = new SpeechRec(); r.lang = 'en-US'; r.interimResults = true; r.continuous = true;
-  r.onresult = e => { const said = Array.from(e.results, x => x[0].transcript).join(' ');
+  r.onresult = e => { const said = fixSaid(Array.from(e.results, x => x[0].transcript).join(' '), !base);
     box.value = (base + said).replace(/\s+/g, ' ').replace(/^\s+/, '').slice(0, 1200); box.dispatchEvent(new Event('input')); };
   r.onerror = e => { const m = {'not-allowed':'Clutch needs your microphone for this. Allow it in the browser and tap the mic again.', 'service-not-allowed':'Voice typing doesn\'t work in this browser. Use the mic on your keyboard instead.', 'no-speech':'Didn\'t hear anything. Tap the mic and try again.', 'audio-capture':'No microphone found.', 'network':'Voice typing needs an internet connection.'}[e.error]; if (m) toast(m); };
   r.onend = () => { if (rec === r){ micOff(); if (innerWidth > 1160 && box.value) box.focus(); } };

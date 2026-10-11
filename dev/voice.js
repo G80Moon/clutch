@@ -1,6 +1,6 @@
 // Voice typing: tap the mic, talk, words land in the chat box (fake speech recognition), tap again to stop. Also: no mic button where the browser can't do it. Run: node dev/voice.js
 const { chromium, devices } = require('playwright');
-const FAKE = () => { window.webkitSpeechRecognition = class { start(){ window.__rec = this; const said = ['what should I', 'what should I work on', 'what should I work on tonight'];
+const FAKE = () => { window.webkitSpeechRecognition = class { start(){ window.__rec = this; const said = window.__sayList || ['what should I', 'what should I work on', 'what should I work on tonight'];
   said.forEach((t,i) => setTimeout(() => this.onresult && this.onresult({ results: [Object.assign([{ transcript: t }], { isFinal: i === said.length-1 })] }), 100*(i+1))); }
   stop(){ setTimeout(() => this.onend && this.onend(), 20); } }; window.SpeechRecognition = window.webkitSpeechRecognition; };
 (async()=>{ const b = await chromium.launch(); const errs=[];
@@ -17,6 +17,10 @@ const FAKE = () => { window.webkitSpeechRecognition = class { start(){ window.__
   console.log(phone ? 'iPhone' : 'desktop', '| listening:', on, '| mid-sentence:', JSON.stringify(mid), '| box:', JSON.stringify(await p.$eval('#box', e=>e.value)), '| after stop:', await p.$eval('#micBtn', e=>e.getAttribute('aria-pressed')));
   await p.click('#sendBtn'); await p.waitForTimeout(1500); console.log('sent bubble:', await p.$$eval('#msgs .msg.me', e=>e[e.length-1].textContent));
  }
+ // the speech engine hears "he clutch": the box should still say "Hey Clutch,"
+ const h = await (await b.newContext({viewport:{width:1280,height:800}})).newPage(); await h.addInitScript(FAKE); await h.addInitScript(()=>{ window.__sayList = ['he clutch', 'he clutch what should I do tonight']; });
+ await h.goto('http://localhost:8787/'); await h.waitForTimeout(800); await h.click('.lnav [data-land=skip]'); await h.waitForTimeout(400);
+ await h.click('#micBtn'); await h.waitForTimeout(400); console.log('"he clutch what should I do tonight" ->', JSON.stringify(await h.$eval('#box', e=>e.value)));
  const n = await (await b.newContext()).newPage(); await n.addInitScript(()=>{ delete window.webkitSpeechRecognition; delete window.SpeechRecognition; });
  await n.goto('http://localhost:8787/'); await n.waitForTimeout(600); console.log('no speech support -> mic hidden:', await n.$eval('#micBtn', e=>e.hidden));
  console.log('errors:', errs); await b.close(); })();
