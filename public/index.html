@@ -528,29 +528,27 @@ html[data-rail="closed"] .rail .hello.ritem .ri{color:var(--ink2)}
 .plaque .when{font-size:11px;color:var(--muted)}
 .trsec{margin:6px 0 4px}
 @media (max-width:560px){.trgrid{grid-template-columns:1fr 1fr}}
-.xp{margin:10px 0 8px;padding:10px 12px;background:var(--accent-soft);border-radius:12px;display:grid;gap:6px}
+.xp{margin:6px 0 2px;padding:10px 12px;background:var(--accent-soft);border-radius:12px;display:grid;gap:6px}
 .xph{display:flex;justify-content:space-between;font-size:12.5px;color:var(--ink2)}
 .xph b{color:var(--accent-deep)}
 .xp .bar{background:rgba(35,131,226,.18)}
 .xpn{font-size:11.5px;color:var(--muted)}
-.badges{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
-.badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 8px 3px 6px;border-radius:99px;border:1px solid var(--line2);color:var(--muted);background:var(--field)}
-.badge i{width:8px;height:8px;border-radius:50%;background:var(--line2)}
-.badge.on{color:var(--accent-deep);border-color:var(--accent);background:var(--accent-soft)}
-.badge.on i{background:var(--accent)}
-.badge.gold{color:#6E5A14;border-color:#D9B84A;background:#FBF3DB}
-.badge.gold i{background:#E3B93B;box-shadow:0 0 0 2px rgba(227,185,59,.3)}
 .streak{font-size:11.5px;font-weight:600;color:var(--soon);background:var(--t-orange);padding:3px 8px;border-radius:5px}
 .score .rank{margin-left:12px;font-size:13px;font-weight:600;color:var(--accent-deep);background:var(--accent-soft);padding:4px 10px;border-radius:99px;align-self:center}
-.mnavs{display:grid;gap:1px;margin-top:4px}
-.mnav{display:grid;grid-template-columns:14px minmax(0,1fr) auto;gap:8px;align-items:center;background:none;border:0;padding:6px 8px;border-radius:12px;text-align:left;font-size:14px;color:var(--ink2)}
+.mnavs{display:grid;gap:2px;margin-top:2px}
+.mgroup{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:14px 8px 4px}
+.mgroup:first-child{margin-top:4px}
+.mnav .num{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:600;color:var(--muted);background:var(--line);font-variant-numeric:tabular-nums}
+.mnav .num.done{background:var(--accent);color:#fff}.mnav .num svg{width:13px;height:13px}
+.mnav.on .num:not(.done){background:var(--accent);color:#fff;opacity:.85}
+.mnav{display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:10px;align-items:center;background:none;border:0;padding:7px 8px;border-radius:12px;text-align:left;font-size:14px;color:var(--ink2)}
 .mnav:hover{background:var(--hover)}
 .mnav.on{background:var(--accent-soft);color:var(--accent-deep);font-weight:500}
 .mnav .dot{width:12px;height:12px;border-radius:50%;border:1.5px solid var(--line2)}
 .mnav .dot.done{background:var(--accent);border-color:var(--accent)}
 .mnav.on .dot{border-color:var(--accent)}
 .mnav .ms{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
-.mnav.final{margin-top:6px;border-top:1px solid var(--line);border-radius:0 0 5px 5px;padding-top:10px}
+
 .lesson{max-width:680px}
 .ls{font-family:var(--display);font-size:16px;font-weight:700;margin:20px 0 6px;letter-spacing:-.01em}
 .lbody ul:not(.facts){margin:0 0 12px;padding-left:20px}
@@ -592,6 +590,7 @@ sup.cite{font-size:10.5px;color:var(--accent);font-weight:600;margin-left:2px;cu
 .quiz{margin-top:30px;border-top:1px solid var(--line);padding-top:18px}
 .quiz-h{display:flex;align-items:baseline;gap:10px;margin-bottom:6px}
 .quiz-h h4{margin:0;font-size:17px;font-weight:600}
+.quiz .qbar{margin:6px 0 4px}.quiz .q .btn{margin-top:12px}
 .q{padding:12px 0}
 .qq,.fq{margin:0 0 10px;font-weight:500;font-size:15px}
 .fq{font-size:19px;line-height:1.4;margin:18px 0 14px;font-weight:600}
@@ -2102,9 +2101,7 @@ function xpTotal(){ ensureMoney(); let xp = 0; for (const l of LESSONS){ const r
 function levelFor(xp){ let i = 0; for (let k=0;k<LEVELS.length;k++) if (xp >= LEVELS[k][0]) i = k; const next = LEVELS[i+1]; return {i, name:LEVELS[i][1], xp, next: next ? next[0] : null, pct: next ? (xp-LEVELS[i][0])/(next[0]-LEVELS[i][0])*100 : 100}; }
 function xpHTML(){
   const L = levelFor(xpTotal());
-  return `<div class="xp"><div class="xph"><span><b>Level ${L.i+1}</b> · ${L.name}</span><span class="num">${L.xp} XP</span></div><div class="bar"><i style="width:${L.pct}%"></i></div><div class="xpn">${L.next ? `${L.next - L.xp} XP to level ${L.i+2}` : 'Max level'}</div></div>
-    <div class="badges">${LESSONS.map(l=>{ const r = S.money.lessons[l.id]; const st = !r ? 'locked' : r.score===r.total ? 'gold' : 'on'; return `<span class="badge ${st}" title="${BADGES[l.id]}${r?` · ${r.score}/${r.total}`:' · finish the lesson quiz'}"><i></i>${BADGES[l.id]}</span>`; }).join('')}</div>`;
-}
+  return `<div class="xp"><div class="xph"><span><b>Level ${L.i+1}</b> · ${L.name}</span><span class="num">${L.xp} XP</span></div><div class="bar"><i style="width:${L.pct}%"></i></div><div class="xpn">${L.next ? `${L.next - L.xp} XP to level ${L.i+2}` : 'Max level'}</div></div>`; }
 function awardCheck(before){
   const after = xpTotal(), Lb = levelFor(before), La = levelFor(after);
   if (La.i > Lb.i){ setTimeout(()=>{ const el = document.querySelector('.xp'); if (el){ const [x,y] = centerOf(el); burst(x,y,24); } toast(`Level ${La.i+1}: ${La.name}. ${after} XP.`); }, 700); return true; }
@@ -2157,6 +2154,8 @@ function bindTool(kind){
 /* rendering */
 function lessonStatus(id){ const r = S.money.lessons[id]; return r ? `${r.score}/${r.total}` : ''; }
 function doneCount(){ return LESSONS.filter(l=>S.money.lessons[l.id]).length; }
+const MICON = {quiz:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l2.5 2.5L16 9"/><rect x="4" y="4" width="16" height="16" rx="3"/></svg>', calc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/></svg>', book:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h9a4 4 0 0 1 4 4v12H9a4 4 0 0 1-4-4z"/><path d="M5 16a4 4 0 0 1 4-4h9"/></svg>'};
+const MCHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 function renderMoneyNav(){
   renderDayCard();
   $('#mXp').innerHTML = xpHTML();
@@ -2164,28 +2163,36 @@ function renderMoneyNav(){
   const n = doneCount();
   $('#mProg').style.width = (n/LESSONS.length*100)+'%';
   $('#mProgLbl').innerHTML = `${n} of ${LESSONS.length} lessons · ${S.money.reward ? '<b>free semester of Clutch+ earned</b>' : 'finish all 5 for a free semester of Clutch+'}${moneyTasks().length ? '' : '<br><button type="button" class="textbtn mplan" data-maddplan>Add the lessons to my planner</button>'}`;
-  $('#mNav').innerHTML = LESSONS.map((l,i)=>`<button type="button" class="mnav${curLesson===l.id?' on':''}" data-l="${l.id}">
-      <span class="dot${S.money.lessons[l.id]?' done':''}" aria-hidden="true"></span>
-      <span class="mt">${l.short}</span><span class="ms">${lessonStatus(l.id)||l.min+' min'}</span></button>`).join('') +
-    `<button type="button" class="mnav final${curLesson==='final'?' on':''}" data-l="final">
-      <span class="dot${S.money.final?' done':''}" aria-hidden="true"></span>
-      <span class="mt">Final quiz</span><span class="ms">${S.money.final?`${S.money.final.score}/${S.money.final.total}`:(n<LESSONS.length?'locked':'10 Qs')}</span></button>
-    <button type="button" class="mnav${curLesson==='cost'?' on':''}" data-l="cost"><span class="dot" aria-hidden="true" style="visibility:hidden"></span><span class="mt">Semester cost</span><span class="ms">planner</span></button>
-    <button type="button" class="mnav${curLesson==='cited'?' on':''}" data-l="cited"><span class="dot" aria-hidden="true" style="visibility:hidden"></span><span class="mt">Works cited</span><span class="ms">${Object.keys(SOURCES).length} sources</span></button>`;
+  const row = (id, num, done, title, meta, extra='') => `<button type="button" class="mnav${curLesson===id?' on':''}${extra}" data-l="${id}"><span class="num${done?' done':''}" aria-hidden="true">${done ? MCHECK : num}</span><span class="mt">${title}</span><span class="ms">${meta}</span></button>`;
+  $('#mNav').innerHTML = `<div class="mgroup">Lessons</div>` +
+    LESSONS.map((l,i)=>row(l.id, i+1, !!S.money.lessons[l.id], l.short, lessonStatus(l.id)||l.min+' min')).join('') +
+    `<div class="mgroup">Test yourself</div>` +
+    row('final', MICON.quiz, !!S.money.final, 'Final quiz', S.money.final ? `${S.money.final.score}/${S.money.final.total}` : (n<LESSONS.length ? 'after the lessons' : '10 questions')) +
+    `<div class="mgroup">Tools</div>` +
+    row('cost', MICON.calc, false, 'Semester cost', 'calculator') +
+    row('cited', MICON.book, false, 'Works cited', `${Object.keys(SOURCES).length} sources`);
 }
 $('#mNav').onclick = e => { const b = e.target.closest('[data-l]'); if(!b) return; curLesson = b.dataset.l; finalRun = null; renderMoney(); $('#mPane').scrollIntoView({block:'start',behavior:'smooth'}); };
 
+// lesson quiz: one question per screen with Next, then the score. lq tracks which question is showing.
+let lq = {id:null, i:0};
 function quizHTML(l){
-  const ans = S.money.answers[l.id] || {};
-  return `<div class="quiz"><div class="quiz-h"><h4>Check yourself</h4><span class="lbl">${l.quiz.length} questions</span></div>` +
-    l.quiz.map((q,qi)=>{ const pick = ans[qi];
-      return `<div class="q" data-q="${qi}"><p class="qq">${qi+1}. ${esc(q.q)}</p><div class="opts">` +
-        q.o.map((o,oi)=>{ let c=''; if(pick!==undefined){ if(oi===q.a) c=' correct'; else if(oi===pick) c=' wrong'; else c=' dim'; if(qi===freshQ && (oi===pick)) c+=' fresh'; }
-          return `<button type="button" class="opt${c}" data-o="${oi}" ${pick!==undefined?'disabled':''}>${esc(o)}</button>`; }).join('') +
-        `</div>${pick!==undefined?`<p class="explain ${pick===q.a?'ok':'no'}"><b>${pick===q.a?'Correct.':'Not quite.'}</b> ${esc(q.e)}</p>`:''}</div>`; }).join('') +
-    `<div id="qFoot"></div></div>`;
+  const ans = S.money.answers[l.id] || {}, N = l.quiz.length, answered = Object.keys(ans).length;
+  if (lq.id !== l.id) lq = {id:l.id, i: answered >= N ? N : answered};
+  const head = `<div class="quiz-h"><h4>Check yourself</h4><span class="lbl">${N} questions</span></div>`;
+  if (lq.i >= N) return `<div class="quiz">${head}<div id="qFoot"></div></div>`;
+  const qi = lq.i, q = l.quiz[qi], pick = ans[qi];
+  return `<div class="quiz">${head}
+    <div class="fq-top"><span class="lbl">Question ${qi+1} of ${N}</span>${streak>=2?`<span class="streak">${streak} in a row</span>`:''}</div>
+    <div class="bar qbar"><i style="width:${(qi + (pick!==undefined?1:0))/N*100}%"></i></div>
+    <div class="q" data-q="${qi}"><p class="qq">${esc(q.q)}</p><div class="opts">` +
+      q.o.map((o,oi)=>{ let c=''; if(pick!==undefined){ if(oi===q.a) c=' correct'; else if(oi===pick) c=' wrong'; else c=' dim'; if(qi===freshQ && oi===pick) c+=' fresh'; }
+        return `<button type="button" class="opt${c}" data-o="${oi}" ${pick!==undefined?'disabled':''}>${esc(o)}</button>`; }).join('') +
+    `</div>${pick!==undefined?`<p class="explain ${pick===q.a?'ok':'no'}"><b>${pick===q.a?'Correct.':'Not quite.'}</b> ${esc(q.e)}</p>
+      <button type="button" class="btn solid" data-qa="qnext">${qi+1<N?'Next question':'See my score'}</button>`:''}</div></div>`;
 }
 function renderQuizFoot(l){
+  if (!$('#qFoot')) return;
   const ans = S.money.answers[l.id] || {}, n = Object.keys(ans).length;
   if (n < l.quiz.length){ $('#qFoot').innerHTML = ''; return; }
   const score = l.quiz.filter((q,i)=>ans[i]===q.a).length;
@@ -2209,13 +2216,14 @@ $('#mPane').onclick = e => {
     const l = LESSONS.find(x=>x.id===curLesson);
     if (opt && !opt.disabled && opt.closest('.q')){
       const qi = Number(opt.closest('.q').dataset.q); (S.money.answers[l.id] ||= {})[qi] = Number(opt.dataset.o); freshQ = qi;
-      if (Number(opt.dataset.o) === l.quiz[qi].a){ streak++; const [x,y] = centerOf(opt); burst(x,y,streak>=3?18:10); if (streak>=2) toast(`${streak} in a row`); } else streak = 0;
+      if (Number(opt.dataset.o) === l.quiz[qi].a){ streak++; const [x,y] = centerOf(opt); burst(x,y,streak>=3?18:10); } else streak = 0;
       const ans = S.money.answers[l.id];
-      if (Object.keys(ans).length === l.quiz.length){ const before = xpTotal(), had = !!S.money.lessons[l.id]; const sc = l.quiz.filter((q,i)=>ans[i]===q.a).length; const prev = S.money.lessons[l.id]; S.money.lessons[l.id] = {score: prev ? Math.max(prev.score, sc) : sc, total:l.quiz.length}; moneyReward(); const gained = xpTotal()-before; setTimeout(()=>toast(had ? `${l.short}: ${sc}/${l.quiz.length}.${gained>0?` +${gained} XP.`:''}` : `Badge unlocked: ${BADGES[l.id]}. +${gained} XP.`), 250); if (!awardCheck(before) && !had) setTimeout(()=>{ const el = document.querySelector('.badges'); if (el){ const [x,y] = centerOf(el); burst(x,y,14); } }, 300); }
+      if (Object.keys(ans).length === l.quiz.length){ const before = xpTotal(), had = !!S.money.lessons[l.id]; const sc = l.quiz.filter((q,i)=>ans[i]===q.a).length; const prev = S.money.lessons[l.id]; S.money.lessons[l.id] = {score: prev ? Math.max(prev.score, sc) : sc, total:l.quiz.length}; moneyReward(); const gained = xpTotal()-before; setTimeout(()=>toast(had ? `${l.short}: ${sc}/${l.quiz.length}.${gained>0?` +${gained} XP.`:''}` : `Badge unlocked: ${BADGES[l.id]}. +${gained} XP.`), 250); if (!awardCheck(before) && !had) setTimeout(()=>{ const el = document.querySelector('.xp'); if (el){ const [x,y] = centerOf(el); burst(x,y,14); } }, 300); }
       save(); const y = window.scrollY; renderLesson(l); renderMoneyNav(); window.scrollTo(0,y); freshQ = -1;
     }
     if (qa){ const act = qa.dataset.qa;
-      if (act==='retry'){ delete S.money.answers[l.id]; save(); renderLesson(l); }
+      if (act==='retry'){ delete S.money.answers[l.id]; lq = {id:l.id, i:0}; save(); renderLesson(l); document.querySelector('#mPane .quiz').scrollIntoView({block:'start',behavior:'smooth'}); }
+      if (act==='qnext'){ lq.i++; const y = window.scrollY; renderLesson(l); window.scrollTo(0,y); }
       if (act==='next'){ curLesson = LESSONS[LESSONS.indexOf(l)+1].id; renderMoney(); $('#mPane').scrollIntoView({block:'start',behavior:'smooth'}); }
       if (act==='final'){ curLesson = 'final'; renderMoney(); }
     }

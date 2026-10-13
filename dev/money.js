@@ -12,7 +12,10 @@ console.log('next up is real work:', await p.$eval('#nextCard',e=>e.innerText.sp
 await p.click('#list .item:has(.course:text-is("MONEY 101")) [data-act=toggle]'); await p.waitForTimeout(500);
 console.log('checkbox opened:', await p.$eval('#grid',e=>e.dataset.view), '|', await p.$eval('#mPane',e=>e.innerText.split('\n').filter(Boolean).slice(0,2).join(' / ')));
 for (let i=0;i<5;i++){
-  const nq = await p.$$eval('#mPane .q', e=>e.length); for (let qi=0; qi<nq; qi++){ const o = await p.$(`#mPane .q[data-q="${qi}"] .opt:not([disabled])`); if (o){ await o.click(); await p.waitForTimeout(120); } }
+  // one question per screen: answer, Next, until the score shows
+  for (let k=0; k<10 && !(await p.$('#qFoot')); k++){ if (i===0 && k===0) console.log('one question showing:', await p.$$eval('#mPane .q',e=>e.length), '|', await p.$eval('#mPane .fq-top',e=>e.innerText));
+    const o = await p.$('#mPane .q .opt:not([disabled])'); if (o){ await o.click(); await p.waitForTimeout(150); } const nx = await p.$('#mPane [data-qa=qnext]'); if (nx){ await nx.click(); await p.waitForTimeout(150); } }
+  if (i===0) console.log('score screen:', await p.$eval('#qFoot',e=>e.innerText.replace(/\n/g,' | ')));
   await p.waitForTimeout(300);
   if (i<4){ const nx = await p.$('#qFoot [data-qa=next]'); if (nx){ await nx.click(); await p.waitForTimeout(300); } }
 }
