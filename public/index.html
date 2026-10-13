@@ -558,7 +558,14 @@ sup.cite{font-size:10.5px;color:var(--accent);font-weight:600;margin-left:2px;cu
 .remember .lbl{color:var(--accent-deep);margin-bottom:6px}
 .remember ul{margin:0;padding-left:18px;font-size:14.5px;line-height:1.55;font-weight:500}
 .remember li{margin:3px 0}
-.srcbox{margin:12px 0 6px;padding:12px 14px;background:var(--side);border-radius:12px}
+.srcbox{margin:12px 0 6px;padding:10px 14px;background:var(--side);border-radius:12px}
+.srcbox summary{cursor:pointer;list-style:none}.srcbox summary::-webkit-details-marker{display:none}
+.srcbox summary::after{content:" +";color:var(--muted)}.srcbox[open] summary::after{content:" \2212"}
+.lhead{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:6px}
+.lesson .lhead h3{margin-bottom:0}
+.lseg button{padding:6px 14px;font-size:13.5px}
+.lnext{margin-top:22px;display:flex;justify-content:flex-end}
+.lesson .quiz{margin-top:22px;border-top:0;padding-top:0}
 .srcbox ol{margin:6px 0 0;padding-left:18px;font-size:12.5px;line-height:1.5;color:var(--ink2)}
 .srcbox li{margin:3px 0;overflow-wrap:anywhere}
 .srcbox a,.wc a{color:inherit;text-decoration:none}
@@ -1003,6 +1010,12 @@ nav.tabs{display:none}
   .toast.on{transform:translate(-50%,0)}
   .money{grid-template-columns:1fr;gap:20px}
   .mside{position:static}
+  .mside .sub,.mgroup{display:none}
+  .mnavs{display:flex;gap:8px;overflow-x:auto;margin:2px -16px 0;padding:2px 16px 6px;scrollbar-width:none}
+  .mnavs::-webkit-scrollbar{display:none}
+  .mnav{flex:none;grid-template-columns:22px auto;gap:6px;padding:6px 12px 6px 6px;border:1px solid var(--line2);border-radius:99px;background:var(--field)}
+  .mnav .ms{display:none}
+  .mnav .num{width:22px;height:22px}
   .views{display:none}
   .rail{display:none}
   .chat{position:static;height:calc(100dvh - 176px - env(safe-area-inset-bottom,0px));min-height:0;background:transparent;border-radius:0}
@@ -1968,7 +1981,7 @@ function cite(html, order){
 }
 function sourcesHTML(order){
   if (!order.length) return '';
-  return `<div class="srcbox"><div class="lbl">Sources for this lesson</div><ol>${order.map(k=>`<li>${SOURCES[k].url?`<a href="${SOURCES[k].url}" target="_blank" rel="noopener">${SOURCES[k].mla}</a>`:SOURCES[k].mla}</li>`).join('')}</ol></div>`;
+  return `<details class="srcbox"><summary class="lbl">Sources for this lesson (${order.length})</summary><ol>${order.map(k=>`<li>${SOURCES[k].url?`<a href="${SOURCES[k].url}" target="_blank" rel="noopener">${SOURCES[k].mla}</a>`:SOURCES[k].mla}</li>`).join('')}</ol></details>`;
 }
 
 const LESSONS = [
@@ -2175,11 +2188,11 @@ function renderMoneyNav(){
 $('#mNav').onclick = e => { const b = e.target.closest('[data-l]'); if(!b) return; curLesson = b.dataset.l; finalRun = null; renderMoney(); $('#mPane').scrollIntoView({block:'start',behavior:'smooth'}); };
 
 // lesson quiz: one question per screen with Next, then the score. lq tracks which question is showing.
-let lq = {id:null, i:0};
+let lq = {id:null, i:0}, lessonTab = {id:null, t:'read'};
 function quizHTML(l){
   const ans = S.money.answers[l.id] || {}, N = l.quiz.length, answered = Object.keys(ans).length;
   if (lq.id !== l.id) lq = {id:l.id, i: answered >= N ? N : answered};
-  const head = `<div class="quiz-h"><h4>Check yourself</h4><span class="lbl">${N} questions</span></div>`;
+  const head = '';
   if (lq.i >= N) return `<div class="quiz">${head}<div id="qFoot"></div></div>`;
   const qi = lq.i, q = l.quiz[qi], pick = ans[qi];
   return `<div class="quiz">${head}
@@ -2206,14 +2219,20 @@ function renderLesson(l){
   const tool = toolHTML(l.tool);
   if (bodyHtml.includes('<!--TOOL-->')) bodyHtml = bodyHtml.replace('<!--TOOL-->', tool); else bodyHtml += tool;
   const remember = l.remember ? `<div class="remember"><div class="lbl">Remember</div><ul>${l.remember.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>` : '';
-  $('#mPane').innerHTML = `<article class="lesson"><div class="lbl">Lesson ${i+1} of ${LESSONS.length} · ${l.min} min</div><h3>${l.title}</h3><div class="lbody">${bodyHtml}</div>${remember}${sourcesHTML(order)}${quizHTML(l)}</article>`;
-  if (l.tool) bindTool(l.tool);
+  if (lessonTab.id !== l.id) lessonTab = {id:l.id, t:'read'};
+  const done = S.money.lessons[l.id], quizTab = lessonTab.t === 'quiz';
+  const tabs = `<div class="seg lseg" role="tablist"><button type="button" role="tab" data-lt="read" aria-pressed="${!quizTab}">Lesson</button><button type="button" role="tab" data-lt="quiz" aria-pressed="${quizTab}">Quiz${done ? ` · ${done.score}/${done.total}` : ''}</button></div>`;
+  $('#mPane').innerHTML = `<article class="lesson"><div class="lhead"><div><div class="lbl">Lesson ${i+1} of ${LESSONS.length} · ${l.min} min</div><h3>${l.title}</h3></div>${tabs}</div>` +
+    (quizTab ? quizHTML(l) : `<div class="lbody">${bodyHtml}</div>${remember}${sourcesHTML(order)}<div class="lnext"><button type="button" class="btn solid" data-lt="quiz">${done ? 'Retake the quiz' : 'Take the quiz'} · ${l.quiz.length} questions</button></div>`) + `</article>`;
+  if (l.tool && !quizTab) bindTool(l.tool);
   renderQuizFoot(l);
 }
 $('#mPane').onclick = e => {
   const opt = e.target.closest('.opt'); const qa = e.target.closest('[data-qa]'); const fa = e.target.closest('[data-fa]');
   if (curLesson !== 'final'){
     const l = LESSONS.find(x=>x.id===curLesson);
+    const lt = e.target.closest('[data-lt]');
+    if (lt){ lessonTab = {id:l.id, t:lt.dataset.lt}; if (lt.dataset.lt==='quiz' && lq.id===l.id && lq.i>=l.quiz.length && !S.money.lessons[l.id]) lq.i = 0; renderLesson(l); $('#mPane').scrollIntoView({block:'start',behavior:'smooth'}); return; }
     if (opt && !opt.disabled && opt.closest('.q')){
       const qi = Number(opt.closest('.q').dataset.q); (S.money.answers[l.id] ||= {})[qi] = Number(opt.dataset.o); freshQ = qi;
       if (Number(opt.dataset.o) === l.quiz[qi].a){ streak++; const [x,y] = centerOf(opt); burst(x,y,streak>=3?18:10); } else streak = 0;

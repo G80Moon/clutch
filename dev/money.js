@@ -13,6 +13,7 @@ await p.click('#list .item:has(.course:text-is("MONEY 101")) [data-act=toggle]')
 console.log('checkbox opened:', await p.$eval('#grid',e=>e.dataset.view), '|', await p.$eval('#mPane',e=>e.innerText.split('\n').filter(Boolean).slice(0,2).join(' / ')));
 for (let i=0;i<5;i++){
   // one question per screen: answer, Next, until the score shows
+  { const qt = await p.$('#mPane .lseg [data-lt=quiz]'); if (qt){ await qt.click(); await p.waitForTimeout(200); } }
   for (let k=0; k<10 && !(await p.$('#qFoot')); k++){ if (i===0 && k===0) console.log('one question showing:', await p.$$eval('#mPane .q',e=>e.length), '|', await p.$eval('#mPane .fq-top',e=>e.innerText));
     const o = await p.$('#mPane .q .opt:not([disabled])'); if (o){ await o.click(); await p.waitForTimeout(150); } const nx = await p.$('#mPane [data-qa=qnext]'); if (nx){ await nx.click(); await p.waitForTimeout(150); } }
   if (i===0) console.log('score screen:', await p.$eval('#qFoot',e=>e.innerText.replace(/\n/g,' | ')));
