@@ -13,7 +13,7 @@ console.log('blocks', before, '->', await p.$$eval('#week .blk',e=>e.length));
 console.log('reply2:', await p.$$eval('#msgs .msg.bot',els=>els[els.length-1].innerText.slice(0,120)));
 console.log('plancard:', !!(await p.$('.plancard')), '| action:', await p.$$eval('#msgs .action',els=>els.map(e=>e.textContent).join(' | ')));
 // practice test via json
-await p.click('#views [data-v=study]'); await p.click('#testNew'); await p.waitForTimeout(300); await p.click('#ptGo'); await p.waitForTimeout(1500);
+await p.click('#views [data-v=focus]'); await p.click('#testNew'); await p.waitForTimeout(300); await p.click('#ptGo'); await p.waitForTimeout(1500);
 console.log('test title:', await p.$eval('#ptTitle',e=>e.textContent), '|', await p.$eval('#ptSub',e=>e.textContent));
 await p.keyboard.press('Escape');
 // photo flashcards with image

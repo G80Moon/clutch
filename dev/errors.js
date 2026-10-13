@@ -8,7 +8,7 @@ const lastBot = () => p.$$eval('#msgs .msg.bot',els=>els[els.length-1].innerText
 console.log('device id sent:', await p.evaluate(()=>!!localStorage.getItem('clutch.id')) || '(set on first message)');
 for (const st of [429, 502]){ await p.request.get(M+'/fail?status='+st); await p.fill('#box','what should I do tonight?'); await p.click('#sendBtn'); await p.waitForTimeout(1200); console.log(`chat ${st}:`, await lastBot()); }
 const calls = await (await p.request.get(M+'/calls')).json(); console.log('x-clutch-id stored:', await p.evaluate(()=>localStorage.getItem('clutch.id')));
-await p.request.get(M+'/fail?status=429'); await p.click('#views [data-v=study]'); await p.click('#testNew'); await p.waitForTimeout(300); await p.click('#ptGo'); await p.waitForTimeout(1200);
+await p.request.get(M+'/fail?status=429'); await p.click('#views [data-v=focus]'); await p.click('#testNew'); await p.waitForTimeout(300); await p.click('#ptGo'); await p.waitForTimeout(1200);
 console.log('practice test 429:', (await p.$eval('#ptBody',e=>e.innerText)).replace(/\n+/g,' | ').slice(0,120)); await p.keyboard.press('Escape');
 await p.request.get(M+'/fail?status=502'); await p.setInputFiles('#photoIn', __dirname+'/notes.png'); await p.waitForTimeout(2000); console.log('photo cards 502:', await lastBot());
 await p.request.get(M+'/fail?status=503'); await p.click('#views [data-v=plan]'); await p.fill('#box','hi'); await p.click('#sendBtn'); await p.waitForTimeout(1200);
