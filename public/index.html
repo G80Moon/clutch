@@ -618,6 +618,28 @@ sup.cite{font-size:10.5px;color:var(--accent);font-weight:600;margin-left:2px;cu
 .fq-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
 .tagx{font-size:12px;padding:3px 7px;border-radius:5px;background:var(--t-blue);color:var(--t-blue-i)}
 .final-q .explain{margin-bottom:14px}
+.qcard{max-width:760px;background:var(--field);border:1px solid var(--line);border-radius:18px;box-shadow:0 2px 10px rgba(15,15,15,.06);padding:26px 28px 24px;margin:8px 0 0}
+.qc-top{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.qc-count{font-size:13px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums;margin-right:auto}
+.qc-bar{height:6px;border-radius:99px;background:var(--line);overflow:hidden;margin-bottom:26px}
+.qc-bar i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .3s ease}
+.qc-q{font-family:var(--display);font-size:24px;line-height:1.35;font-weight:600;margin:0 0 26px;text-wrap:pretty}
+.qc-lbl{font-size:13px;font-weight:600;color:var(--muted);margin-bottom:10px}
+.qc-opts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.opt.qc-opt{display:flex;align-items:center;gap:12px;min-height:64px;padding:14px 16px;border:2px solid var(--line2);border-radius:14px;font-size:15.5px;line-height:1.35;background:var(--field);transition:border-color .12s,background .12s,transform .12s}
+.opt.qc-opt:not([disabled]):hover{border-color:var(--accent);background:var(--accent-soft)}
+.opt.qc-opt:not([disabled]):active{transform:scale(.99)}
+.qc-k{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:12.5px;font-weight:700;color:var(--muted);background:var(--line)}
+.qc-k svg{width:14px;height:14px}
+.opt.qc-opt.correct{border-color:var(--ok);background:var(--t-green)}.opt.qc-opt.correct .qc-k{background:var(--ok);color:#fff}
+.opt.qc-opt.wrong{border-color:var(--late);background:var(--t-red)}.opt.qc-opt.wrong .qc-k{background:var(--late);color:#fff}
+.opt.qc-opt.dim{opacity:.45}
+.qc-fb{display:flex;align-items:center;gap:16px;margin-top:20px;padding:14px 16px;border-radius:14px}
+.qc-fb.ok{background:var(--t-green)}.qc-fb.no{background:var(--t-red)}
+.qc-fb p{margin:0;flex:1;font-size:14.5px;line-height:1.45;color:var(--ink)}
+.qc-fb.ok b{color:var(--ok)}.qc-fb.no b{color:var(--late)}
+.qc-fb .btn{flex:none;min-width:130px}
+.qdone .qres{margin:0;background:none;padding:6px 0}.qdone .qres>b{font-size:40px}
 .score{display:flex;align-items:baseline;gap:6px;margin:6px 0 2px}
 .score b{font-family:var(--display);color:var(--accent);font-size:76px;font-weight:800;letter-spacing:-.04em;line-height:1}
 .score span{font-size:22px;color:var(--muted)}
@@ -1011,6 +1033,11 @@ nav.tabs{display:none}
   .money{grid-template-columns:1fr;gap:20px}
   .mside{position:static}
   .mside .sub,.mgroup{display:none}
+  .qcard{padding:20px 16px 18px;border-radius:16px}
+  .qc-q{font-size:20px;margin-bottom:20px}
+  .qc-opts{grid-template-columns:1fr;gap:10px}
+  .opt.qc-opt{min-height:56px}
+  .qc-fb{flex-direction:column;align-items:stretch}
   .mnavs{display:flex;gap:8px;overflow-x:auto;margin:2px -16px 0;padding:2px 16px 6px;scrollbar-width:none}
   .mnavs::-webkit-scrollbar{display:none}
   .mnav{flex:none;grid-template-columns:22px auto;gap:6px;padding:6px 12px 6px 6px;border:1px solid var(--line2);border-radius:99px;background:var(--field)}
@@ -2187,6 +2214,19 @@ function renderMoneyNav(){
 }
 $('#mNav').onclick = e => { const b = e.target.closest('[data-l]'); if(!b) return; curLesson = b.dataset.l; finalRun = null; renderMoney(); $('#mPane').scrollIntoView({block:'start',behavior:'smooth'}); };
 
+// Quizlet-style question card, shared by lesson quizzes and the final: big question, numbered tiles, feedback bar with Continue.
+function qcardHTML({n, total, q, pick, fresh, tag, streakN, cont}){
+  const answered = pick !== undefined, right = answered && pick === q.a;
+  return `<div class="qcard">
+    <div class="qc-top"><span class="qc-count">${n} / ${total}</span>${streakN>=2?`<span class="streak">${streakN} in a row</span>`:''}${tag?`<span class="tagx">${tag}</span>`:''}</div>
+    <div class="qc-bar"><i style="width:${(n-1+(answered?1:0))/total*100}%"></i></div>
+    <p class="qc-q">${esc(q.q)}</p>
+    <div class="qc-lbl">${answered ? (right ? 'Nice, you got it.' : 'Not quite. The right answer is highlighted.') : 'Choose an answer'}</div>
+    <div class="qc-opts">${q.o.map((o,oi)=>{ let c=''; if(answered){ if(oi===q.a) c=' correct'; else if(oi===pick) c=' wrong'; else c=' dim'; if(fresh && oi===pick) c+=' fresh'; }
+      return `<button type="button" class="opt qc-opt${c}" data-o="${oi}" ${answered?'disabled':''}><span class="qc-k">${answered && oi===q.a ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>' : answered && oi===pick ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>' : oi+1}</span><span>${esc(o)}</span></button>`; }).join('')}</div>
+    ${answered ? `<div class="qc-fb ${right?'ok':'no'}"><p><b>${right?'Correct.':'Not quite.'}</b> ${esc(q.e)}</p>${cont}</div>` : ''}
+  </div>`;
+}
 // lesson quiz: one question per screen with Next, then the score. lq tracks which question is showing.
 let lq = {id:null, i:0}, lessonTab = {id:null, t:'read'};
 function quizHTML(l){
@@ -2195,14 +2235,7 @@ function quizHTML(l){
   const head = '';
   if (lq.i >= N) return `<div class="quiz">${head}<div id="qFoot"></div></div>`;
   const qi = lq.i, q = l.quiz[qi], pick = ans[qi];
-  return `<div class="quiz">${head}
-    <div class="fq-top"><span class="lbl">Question ${qi+1} of ${N}</span>${streak>=2?`<span class="streak">${streak} in a row</span>`:''}</div>
-    <div class="bar qbar"><i style="width:${(qi + (pick!==undefined?1:0))/N*100}%"></i></div>
-    <div class="q" data-q="${qi}"><p class="qq">${esc(q.q)}</p><div class="opts">` +
-      q.o.map((o,oi)=>{ let c=''; if(pick!==undefined){ if(oi===q.a) c=' correct'; else if(oi===pick) c=' wrong'; else c=' dim'; if(qi===freshQ && oi===pick) c+=' fresh'; }
-        return `<button type="button" class="opt${c}" data-o="${oi}" ${pick!==undefined?'disabled':''}>${esc(o)}</button>`; }).join('') +
-    `</div>${pick!==undefined?`<p class="explain ${pick===q.a?'ok':'no'}"><b>${pick===q.a?'Correct.':'Not quite.'}</b> ${esc(q.e)}</p>
-      <button type="button" class="btn solid" data-qa="qnext">${qi+1<N?'Next question':'See my score'}</button>`:''}</div></div>`;
+  return `<div class="quiz"><div class="q" data-q="${qi}">${qcardHTML({n:qi+1, total:N, q, pick, fresh: qi===freshQ, streakN: streak, cont:`<button type="button" class="btn solid" data-qa="qnext">${qi+1<N?'Continue':'See my score'}</button>`})}</div></div>`;
 }
 function renderQuizFoot(l){
   if (!$('#qFoot')) return;
@@ -2210,8 +2243,8 @@ function renderQuizFoot(l){
   if (n < l.quiz.length){ $('#qFoot').innerHTML = ''; return; }
   const score = l.quiz.filter((q,i)=>ans[i]===q.a).length;
   const idx = LESSONS.findIndex(x=>x.id===l.id), next = LESSONS[idx+1];
-  $('#qFoot').innerHTML = `<div class="qres"><b>${score}/${l.quiz.length}</b><span>${score===l.quiz.length?'Clean sweep.':score>=2?'Solid. Read the explanations on the one you missed.':'Worth a second read. Or ask Clutch to explain it differently.'}</span>
-    <div class="qbtns"><button type="button" class="btn" data-qa="retry">Retake</button>${next?`<button type="button" class="btn solid" data-qa="next">Next: ${next.short}</button>`:`<button type="button" class="btn solid" data-qa="final">Take the final quiz</button>`}</div></div>`;
+  $('#qFoot').innerHTML = `<div class="qcard qdone"><div class="qres"><b>${score}/${l.quiz.length}</b><span>${score===l.quiz.length?'Clean sweep.':score>=2?'Solid. Read the explanations on the one you missed.':'Worth a second read. Or ask Clutch to explain it differently.'}</span>
+    <div class="qbtns"><button type="button" class="btn" data-qa="retry">Retake</button>${next?`<button type="button" class="btn solid" data-qa="next">Next: ${next.short}</button>`:`<button type="button" class="btn solid" data-qa="final">Take the final quiz</button>`}</div></div></div>`;
 }
 function renderLesson(l){
   const i = LESSONS.indexOf(l), order = [];
@@ -2270,16 +2303,17 @@ function renderFinal(fresh){
     return;
   }
   const q = FINAL[finalRun.i], pick = finalRun.picks[finalRun.i];
-  $('#mPane').innerHTML = `<article class="lesson final-q">
-    <div class="fq-top"><span class="lbl">Question ${finalRun.i+1} of ${FINAL.length}</span><span style="display:flex;gap:6px;align-items:center">${(finalRun.streak||0)>=2?`<span class="streak">${finalRun.streak} in a row</span>`:''}<span class="tagx">${TOPIC[q.t]}</span></span></div>
-    <div class="bar"><i style="width:${(finalRun.i)/FINAL.length*100}%"></i></div>
-    <p class="fq">${esc(q.q)}</p>
-    <div class="opts">${q.o.map((o,oi)=>{ let c=''; if(pick!==undefined){ if(oi===q.a) c=' correct'; else if(oi===pick) c=' wrong'; else c=' dim'; if(fresh && oi===pick) c+=' fresh'; }
-      return `<button type="button" class="opt${c}" data-o="${oi}" ${pick!==undefined?'disabled':''}>${esc(o)}</button>`; }).join('')}</div>
-    ${pick!==undefined?`<p class="explain ${pick===q.a?'ok':'no'}"><b>${pick===q.a?'Correct.':'Not quite.'}</b> ${esc(q.e)}</p>
-      <button type="button" class="btn solid" data-fa="next">${finalRun.i+1<FINAL.length?'Next question':'See my score'}</button>`:''}
-  </article>`;
+  $('#mPane').innerHTML = `<article class="lesson final-q"><div class="lbl">Final quiz</div>${qcardHTML({n:finalRun.i+1, total:FINAL.length, q, pick, fresh, tag:TOPIC[q.t], streakN:finalRun.streak||0, cont:`<button type="button" class="btn solid" data-fa="next">${finalRun.i+1<FINAL.length?'Continue':'See my score'}</button>`})}</article>`;
 }
+// phones: after answering, bring the feedback and Continue into view
+$('#mPane').addEventListener('click', e => { if (!e.target.closest('.qc-opt') || innerWidth > 1160) return; setTimeout(()=>{ const fb = document.querySelector('#mPane .qc-fb'); if (fb) fb.scrollIntoView({block:'nearest', behavior: reduceMotion ? 'auto' : 'smooth'}); }, 60); });
+// keys on the Money tab: 1 to 4 answer, Enter continues (never while typing)
+document.addEventListener('keydown', e => {
+  if ($('#grid').dataset.view !== 'money' || e.metaKey || e.ctrlKey || e.altKey || /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;
+  const card = document.querySelector('#mPane .qcard'); if (!card) return;
+  if (/^[1-4]$/.test(e.key)){ const o = card.querySelectorAll('.qc-opt')[Number(e.key)-1]; if (o && !o.disabled){ e.preventDefault(); o.click(); } }
+  else if (e.key === 'Enter'){ const c = card.querySelector('.qc-fb .btn'); if (c){ e.preventDefault(); c.click(); } }
+});
 function finishFinal(){
   const missed = FINAL.map((q,i)=>i).filter(i=>finalRun.picks[i]!==FINAL[i].a);
   const res = {score:FINAL.length-missed.length, total:FINAL.length, missed, picks:finalRun.picks.slice()};
