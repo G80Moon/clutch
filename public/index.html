@@ -2356,7 +2356,7 @@ function renderCited(){
   };
 }
 /* semester cost planner: MVCC fall 2026 rates */
-const MV = { tuition:{in:143, out:346, state:404}, fees:25 /* tech 11 + construction 10 + activities 4 */, id:3, online:20, booksPerCredit:1656/24, ride:1536/2, wage:15 };
+const MV = { tuition:{in:143, out:346, state:404}, fees:25 /* tech 11 + construction 10 + activities 4 */, id:3, online:20, booksPerCredit:1632/24 /* MVCC 2025-26 cost of attendance */, ride:1536/2, wage:15 };
 function renderCost(){
   const order = [];
   const body = cite(`<p>Moraine Valley charges tuition per credit hour, and three fees ride along with every credit: technology, construction and activities. In-district that is $168 a credit for fall 2026, so a normal 3 credit class is about $504 before books.{{mvccTuition}} The college's own cost estimate for a full-time year also counts books, transportation and personal spending, and that is where most of the surprise comes from.{{mvccTuition}}</p>
@@ -2371,7 +2371,7 @@ function renderCost(){
       <label class="field"><span>Your hourly wage</span><input id="kWage" type="number" min="8" step="0.5" value="${MV.wage}"></label></div>
       <div class="outs" id="kOut"></div></div>
     <p class="fine">Books use the college's estimate spread over 24 credits a year. Getting to campus uses half of its yearly transportation estimate. Personal spending is on you.</p></div>
-    <div class="remember"><div class="lbl">Remember</div><ul><li>In-district is $168 a credit all in. A 3 credit class is about $504 before books.</li><li>Books run about $69 a credit on the college's own estimate. Check library reserves and used copies first.</li><li>File the FAFSA the week it opens. MAP is first come, first served and it runs out.</li></ul></div>
+    <div class="remember"><div class="lbl">Remember</div><ul><li>In-district is $168 a credit all in. A 3 credit class is about $504 before books.</li><li>Books run about $68 a credit on the college's own estimate. Check library reserves and used copies first.</li><li>File the FAFSA the week it opens. MAP is first come, first served and it runs out.</li></ul></div>
     ${sourcesHTML(order)}</article>`;
   const f = () => {
     const cr = Number($('#kCr').value), res = $('#kRes').value, on = Math.max(0, Number($('#kOn').value)||0), aid = Math.max(0, Number($('#kAid').value)||0), wage = Math.max(1, Number($('#kWage').value)||MV.wage);
